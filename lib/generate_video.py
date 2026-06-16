@@ -27,6 +27,10 @@ import re
 import sys
 import edge_tts
 
+# Fix Windows GBK encoding issue with emoji
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 
 def parse_args():
     """Parse command line arguments."""

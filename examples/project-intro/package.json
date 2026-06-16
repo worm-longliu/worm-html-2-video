@@ -1,0 +1,16 @@
+{
+  "name": "html-video-creator-project-intro",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "worm-html-2-video 项目介绍视频",
+  "scripts": {
+    "capture": "node ../../lib/capture.mjs",
+    "generate": "python ../../lib/generate_video.py",
+    "voiceover": "python ../../lib/generate_video.py --voiceover-only",
+    "subtitles": "python ../../lib/generate_video.py --subtitles-only",
+    "compose": "node ../../lib/capture.mjs && python ../../lib/generate_video.py"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0"
+  }
+}
