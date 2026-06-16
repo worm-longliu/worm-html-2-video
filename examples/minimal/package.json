@@ -1,0 +1,13 @@
+{
+  "name": "html-video-creator-minimal",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "capture": "node ../../lib/capture.mjs",
+    "generate": "python ../../lib/generate_video.py",
+    "all": "node ../../lib/capture.mjs && python ../../lib/generate_video.py"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0"
+  }
+}

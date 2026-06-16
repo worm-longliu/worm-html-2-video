@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<title>Minimal Example - 3场景15秒</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1080px; height: 1920px;
+  overflow: hidden;
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  background: #0f0c29;
+  -webkit-font-smoothing: antialiased;
+}
+.scene {
+  position: absolute; top: 0; left: 0;
+  width: 1080px; height: 1920px;
+  opacity: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.anim { opacity: 0; transform: translateY(30px); }
+
+/* 场景1 */
+#scene-1 { background: linear-gradient(135deg, #0f0c29, #302b63); }
+.title { font-size: 72px; color: #ffffff; font-weight: bold; text-align: center; line-height: 1.5; }
+.subtitle { font-size: 36px; color: #e6e6e6; margin-top: 40px; }
+
+/* 场景2 */
+#scene-2 { background: linear-gradient(180deg, #1a1a2e, #16213e); }
+.content-box {
+  width: 800px; padding: 50px;
+  background: rgba(0,255,136,0.06);
+  border: 2px solid rgba(0,255,136,0.3);
+  border-radius: 20px; text-align: center;
+}
+.content-text { font-size: 40px; color: #e6e6e6; line-height: 2; }
+.highlight { color: #00ff88; font-weight: bold; }
+
+/* 场景3 */
+#scene-3 { background: linear-gradient(135deg, #0f0c29, #24243e); }
+.cta-btn {
+  padding: 25px 60px; background: #00ff88;
+  border-radius: 40px; font-size: 36px;
+  color: #0f0c29; font-weight: bold; margin-top: 40px;
+}
+</style>
+</head>
+<body>
+
+<!-- 场景1: 标题 (0-5s) -->
+<div id="scene-1" class="scene" data-duration="5">
+  <div class="anim title" data-delay="0" data-dur="0.6">最小示例<br>3个场景 15秒</div>
+  <div class="anim subtitle" data-delay="0.5" data-dur="0.6">HTML Video Creator</div>
+</div>
+
+<!-- 场景2: 内容 (5-10s) -->
+<div id="scene-2" class="scene" data-duration="5">
+  <div class="anim content-box" data-delay="0" data-dur="0.6">
+    <div class="content-text">
+      只需 <span class="highlight">3 个文件</span><br>
+      就能生成一个完整视频
+    </div>
+  </div>
+</div>
+
+<!-- 场景3: 结尾 (10-15s) -->
+<div id="scene-3" class="scene" data-duration="5">
+  <div class="anim title" data-delay="0" data-dur="0.6">开始创作吧！</div>
+  <div class="anim cta-btn" data-delay="0.5" data-dur="0.6">⚡ 2分钟出片</div>
+</div>
+
+<script>
+const FPS = 30;
+const SCENE_FADE_FRAMES = 8;
+const scenes = Array.from(document.querySelectorAll('.scene'));
+const totalFrames = scenes.reduce((s, el) => s + Math.round(parseFloat(el.dataset.duration) * FPS), 0);
+
+const sceneFrames = [];
+let offset = 0;
+scenes.forEach((scene, i) => {
+  const dur = parseFloat(scene.dataset.duration);
+  const frames = Math.round(dur * FPS);
+  sceneFrames.push({ start: offset, end: offset + frames, scene, index: i });
+  offset += frames;
+});
+
+function easeOut(t) { return 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3); }
+
+function renderFrame(frame) {
+  let info = null;
+  for (const sf of sceneFrames) { if (frame >= sf.start && frame < sf.end) { info = sf; break; } }
+  if (!info) return;
+
+  const localFrame = frame - info.start;
+  const total = info.end - info.start;
+  let opacity = 1;
+  if (localFrame < SCENE_FADE_FRAMES) opacity = easeOut(localFrame / SCENE_FADE_FRAMES);
+  else if (localFrame > total - SCENE_FADE_FRAMES) opacity = easeOut((total - localFrame) / SCENE_FADE_FRAMES);
+
+  scenes.forEach((s, i) => {
+    s.style.opacity = i === info.index ? opacity : '0';
+    s.style.zIndex = i === info.index ? '100' : '0';
+  });
+
+  info.scene.querySelectorAll('.anim').forEach(anim => {
+    const delay = Math.round(parseFloat(anim.dataset.delay) * FPS);
+    const dur = Math.round(parseFloat(anim.dataset.dur) * FPS);
+    if (localFrame < delay) { anim.style.opacity = '0'; anim.style.transform = 'translateY(30px)'; }
+    else if (localFrame < delay + dur) {
+      const t = easeOut((localFrame - delay) / dur);
+      anim.style.opacity = t; anim.style.transform = `translateY(${30*(1-t)}px)`;
+    } else { anim.style.opacity = '1'; anim.style.transform = 'translateY(0)'; }
+  });
+}
+
+window.__hyperframes = {
+  getTotalFrames: () => totalFrames,
+  getSceneCount: () => scenes.length,
+  getSceneDuration: (i) => parseFloat(scenes[i].dataset.duration),
+  gotoFrame: (f) => renderFrame(Math.max(0, Math.min(f, totalFrames - 1))),
+};
+
+renderFrame(0);
+</script>
+</body>
+</html>

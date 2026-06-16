@@ -1,0 +1,42 @@
+{
+  "name": "worm-html-2-video",
+  "version": "1.0.0",
+  "description": "用 HTML + CSS + JavaScript 制作抖音/TikTok 竖屏视频的完整方案",
+  "type": "module",
+  "bin": {
+    "worm-html-2-video": "./bin/cli.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "templates/",
+    "docs/",
+    "skill/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "capture": "node lib/capture.mjs",
+    "generate": "python lib/generate_video.py"
+  },
+  "keywords": [
+    "video",
+    "html-to-video",
+    "douyin",
+    "tiktok",
+    "vertical-video",
+    "playwright",
+    "ffmpeg",
+    "animation",
+    "subtitle",
+    "video-generation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/worm-longliu/worm-html-2-video"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "playwright": "^1.40.0"
+  }
+}

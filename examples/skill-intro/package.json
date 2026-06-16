@@ -1,0 +1,14 @@
+{
+  "name": "html-video-creator-skill-intro",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "AI 创作全过程 - 从提示词到成品视频（含思考过程记录）",
+  "scripts": {
+    "capture": "node ../../lib/capture.mjs",
+    "generate": "python ../../lib/generate_video.py",
+    "all": "node ../../lib/capture.mjs && python ../../lib/generate_video.py"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0"
+  }
+}

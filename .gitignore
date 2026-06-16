@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Generated frames
+frames/
+
+# Generated videos
+*.mp4
+
+# Generated audio
+*.mp3
+
+# Generated subtitles (keep .srt as reference)
+*.ass
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
