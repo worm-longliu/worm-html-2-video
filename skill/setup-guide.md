@@ -10,7 +10,7 @@
 |------|------|----------|-----------|
 | Node.js 18+ | 运行 Playwright 截图脚本 | 官网 / nvm-windows | 全局 |
 | Python 3.8+ | 运行配音+字幕生成脚本 | 官网 | 全局 |
-| FFmpeg 5.0+ | 视频合成、字幕烧录 | winget / 手动 | 全局 |
+| FFmpeg 5.0+ | 视频合成、配音拼接 | winget / 手动 | 全局 |
 | edge-tts | AI 语音合成 | pip | 全局 |
 | Playwright | 浏览器截图引擎 | npm | 项目 |
 
@@ -216,14 +216,13 @@ echo ==========================================
 echo   安装完成！
 echo ==========================================
 echo.
-echo 下一步:
-echo   1. 编写 voiceover_text.txt（配音文案）
-echo   2. 编写 video.html（场景动画）
-echo   3. python lib/generate_video.py --voiceover-only
-echo   4. python lib/generate_video.py --subtitles-only
-echo   5. 调整 video.html 中 data-duration
-echo   6. node lib/capture.mjs ^&^& python lib/generate_video.py
-echo   7. 观看 video_final.mp4，微调
+echo 下一步（脚本驱动流程）:
+echo   1. npx worm-html-2-video init  生成 script.json（场景+字幕+配音文案）
+echo   2. npx worm-html-2-video script html   生成 video.html 骨架
+echo   3. npx worm-html-2-video voiceover     按场景配音+记录时长
+echo   4. npx worm-html-2-video sync          据时长调整 video.html
+echo   5. npx worm-html-2-video capture       截图
+echo   6. npx worm-html-2-video generate      合成 video_final.mp4
 pause
 ```
 

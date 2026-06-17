@@ -1,0 +1,89 @@
+{
+  "title": "worm-html-2-video 项目介绍",
+  "target_platform": "douyin",
+  "scenes": [
+    {
+      "id": 1,
+      "name": "标题开场",
+      "visual": "** 深色背景，主标题大字居中，副标题渐入，绿色强调关键词",
+      "animation": "** 标题弹入(0s) → 副标题淡入(0.4s) → 绿色标签(0.8s)",
+      "key_elements": [
+        "** 项目名称",
+        "一行卖点",
+        "GitHub 标签"
+      ],
+      "voiceover": "会写网页就能做视频，开源项目 worm-html-2-video。",
+      "subtitle": "会写网页就能做视频，开源项目 worm-html-2-video"
+    },
+    {
+      "id": 2,
+      "name": "痛点共鸣",
+      "visual": "** 三个痛点卡片依次出现，红色图标+描述",
+      "animation": "** 卡片1(0s) → 卡片2(0.5s) → 卡片3(1.0s)",
+      "key_elements": [
+        "** 三张痛点卡片",
+        "红色感叹号"
+      ],
+      "voiceover": "做抖音视频要学 A E、学 P R、学剪辑，门槛高、费时间、改起来还麻烦。",
+      "subtitle": "做抖音视频要学 AE、学 PR、学剪辑，门槛高、费时间、改起来还麻烦"
+    },
+    {
+      "id": 3,
+      "name": "方案引出",
+      "visual": "** 过渡动画 → 解决方案卡片，绿色边框",
+      "animation": "** 三个技术标签依次弹入(0s/0.3s/0.6s) → 箭头(1.0s) → 成品视频图标(1.3s)",
+      "key_elements": [
+        "** HTML/CSS/JS 标签 → 视频图标"
+      ],
+      "voiceover": "现在你只需要 H T M L 加 C S S 加 Java Script，前端三件套就能搞定。",
+      "subtitle": "现在你只需要 HTML 加 CSS 加 JavaScript，前端三件套就能搞定"
+    },
+    {
+      "id": 4,
+      "name": "工作流展示",
+      "visual": "** 7步流程图，逐步高亮展示",
+      "animation": "** 步骤节点依次点亮(0s起，每0.5s一个)",
+      "key_elements": [
+        "** 7 个步骤的流程图"
+      ],
+      "voiceover": "从脚本到 H T M L 到配音到字幕到合成，七步自动化流程，每一步都可以独立调整。",
+      "subtitle": "从脚本到 HTML 到配音到字幕到合成，七步自动化流程，每一步都可以独立调整"
+    },
+    {
+      "id": 5,
+      "name": "技术亮点",
+      "visual": "** 分屏展示核心技术，左侧技术栈列表，右侧动画演示",
+      "animation": "** 三项技术逐条展示(0s/0.6s/1.2s)",
+      "key_elements": [
+        "** Playwright/Edge-TTS/FFmpeg 图标"
+      ],
+      "voiceover": "帧驱动动画系统、Edge T T S 免费配音、F F mpeg 精准字幕，全免费全开源。",
+      "subtitle": "帧驱动动画系统、EdgeTTS 免费配音、FFmpeg 精准字幕，全免费全开源"
+    },
+    {
+      "id": 6,
+      "name": "数据对比",
+      "visual": "** 对比卡片，传统方案 vs 本项目",
+      "animation": "** 左侧卡片(0s) → VS 标签(0.5s) → 右侧卡片(0.8s) → 效率数字跳动(1.5s)",
+      "key_elements": [
+        "** 3-7天 → 2-3分钟",
+        "1000x"
+      ],
+      "voiceover": "传统方案三到七天，这个方案两到三分钟，效率提升一千倍。",
+      "subtitle": "传统方案三到七天，这个方案两到三分钟，效率提升一千倍"
+    },
+    {
+      "id": 7,
+      "name": "CTA 结尾",
+      "visual": "** GitHub 仓库信息，Star 按钮动画，项目地址",
+      "animation": "** 仓库名(0s) → Star 图标(0.6s) → 地址(1.0s) → 关注提示(1.5s)",
+      "key_elements": [
+        "** GitHub 地址",
+        "Star 按钮",
+        "关注引导"
+      ],
+      "voiceover": "GitHub 搜索 worm-html-2-video，开源免费，求个 Star。关注我，下集教你做爆款视频。",
+      "subtitle": "GitHub 搜索 worm-html-2-video，开源免费，求个 Star"
+    }
+  ]
+}

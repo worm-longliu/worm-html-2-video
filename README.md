@@ -169,8 +169,7 @@ Playwright 逐帧调用 `gotoFrame()` 截图，实现精确的动画捕获。
 
 - 字幕条在 HTML 中预留位置，截图时随帧一起捕获
 - 无需 SRT/ASS 生成和 ffmpeg 烧录
-- 算法与 SRT 模式一致：每字 0.22s，场景首尾各留 0.3s
-- 自动导出：`python lib/generate_video.py --export-subtitles subtitles.js`
+- 生成方式：`npx worm-html-2-video script html` 写入初始 SUBTITLES，`npx worm-html-2-video sync` 据配音时长重算 start/end（场景首尾各留 0.3s）
 
 ### 安全区域（抖音）
 
@@ -230,7 +229,7 @@ A: 帧驱动可以精确控制每一帧的画面，适合截图方式捕获。CS
 A: 支持。FFmpeg 和 Playwright 跨平台。新方案 (HTML 内嵌字幕) 已消除 Windows 字幕烧录路径问题。
 
 **Q: 如何自定义配音声音？**
-A: 修改 `generate_video.py` 中的 `TTS_VOICE` 变量。推荐：
+A: 用 `--voice` 参数覆盖（如 `npx worm-html-2-video voiceover --voice zh-CN-XiaoxiaoNeural`），或改 `lib/voiceover.py` 的 `TTS_VOICE_DEFAULT`。推荐：
 - `zh-CN-YunxiNeural` — 年轻男声（默认）
 - `zh-CN-XiaoxiaoNeural` — 女声
 - `zh-CN-YunjianNeural` — 新闻播报风格

@@ -1,0 +1,110 @@
+{
+  "title": "HTML Video Creator 技能介绍",
+  "target_platform": "douyin",
+  "scenes": [
+    {
+      "id": 1,
+      "name": "开场Hook",
+      "visual": "** 发光代码图标 + 主标题 \"用HTML做抖音视频？",
+      "animation": "** 图标淡入 → 标题淡入 → 副标题淡入",
+      "key_elements": [
+        "** 代码符号 `</>` 发光圆环",
+        "主标题",
+        "\"2分钟出片\" 标签"
+      ],
+      "voiceover": "用 HTML 就能做抖音视频？2分钟自动出片！",
+      "subtitle": "用 HTML 就能做抖音视频？2分钟自动出片！"
+    },
+    {
+      "id": 2,
+      "name": "痛点展示",
+      "visual": "** 传统工具图标对比（AE/PR logo + 学习曲线图）",
+      "animation": "** 工具图标依次弹出 → 时间轴展示 → 红色 X 叠加",
+      "key_elements": [
+        "** 传统工具列表",
+        "时间对比",
+        "痛点红色高亮"
+      ],
+      "voiceover": "传统做法：学 AE 学 PR，光装软件就半天。\n模板不合适还得从头改，一个 60 秒视频做三天。",
+      "subtitle": "传统做法：学 AE 学 PR，光装软件就半天"
+    },
+    {
+      "id": 3,
+      "name": "解决方案概览",
+      "visual": "** HTML代码 → 视频成品的转换流程图",
+      "animation": "** 代码块淡入 → 箭头流动 → 视频预览弹出",
+      "key_elements": [
+        "** HTML代码片段",
+        "转换箭头",
+        "视频缩略图"
+      ],
+      "voiceover": "现在用 HTML 加 CSS 动画就能做。\n会写网页就能做视频，帧驱动动画系统，精确到每一帧。",
+      "subtitle": "现在用 HTML 加 CSS 动画就能做"
+    },
+    {
+      "id": 4,
+      "name": "自动化流水线",
+      "visual": "** 四步流程图（Playwright → PNG帧 → Edge-TTS → FFmpeg）",
+      "animation": "** 流程节点依次高亮 → 连线流动 → 最终输出闪烁",
+      "key_elements": [
+        "** 四个流程节点",
+        "连接线",
+        "性能数据标注"
+      ],
+      "voiceover": "全程自动化：Playwright 截图，5 f p s 极速采集。\nEdge-TTS 免费配音，FFmpeg 一键合成带字幕视频。",
+      "subtitle": "全程自动化：Playwright 截图，5 fps 极速采集"
+    },
+    {
+      "id": 5,
+      "name": "智能字幕",
+      "visual": "** 字幕时间轴可视化 + 算法公式",
+      "animation": "** 时间轴展开 → 字幕条依次出现 → 公式淡入",
+      "key_elements": [
+        "** 时间轴图示",
+        "字幕样本",
+        "语速公式"
+      ],
+      "voiceover": "字幕精准对齐：语速算法自动计算时间轴。\n智能换行不拆英文单词，场景边界自动留白。",
+      "subtitle": "字幕精准对齐：语速算法自动计算时间轴"
+    },
+    {
+      "id": 6,
+      "name": "深色主题系统",
+      "visual": "** 颜色分级卡片 + 安全区域示意图",
+      "animation": "** 颜色卡片依次亮起 → 安全区域高亮 → 对比度数值弹出",
+      "key_elements": [
+        "** 四色分级",
+        "安全区域线",
+        "WCAG 对比度值"
+      ],
+      "voiceover": "内置深色主题规范：四级颜色对比度。\n抖音安全区域适配，视频压缩后依然清晰可读。",
+      "subtitle": "内置深色主题规范：四级颜色对比度"
+    },
+    {
+      "id": 7,
+      "name": "多平台适配",
+      "visual": "** 多设备展示（手机竖屏阵列：抖音/视频号/B站/小红书）",
+      "animation": "** 设备依次弹出 → 平台logo叠加 → 绿色对勾确认",
+      "key_elements": [
+        "** 四个手机框",
+        "平台标识",
+        "兼容对勾"
+      ],
+      "voiceover": "一套 HTML 适配四大平台：抖音竖屏、视频号、B站、小红书。\n安全区域自动兼容，一次制作多端分发。",
+      "subtitle": "一套 HTML 适配四大平台：抖音竖屏、视频号、B站、小红书"
+    },
+    {
+      "id": 8,
+      "name": "结尾CTA",
+      "visual": "** 技能Logo + 功能总结 + GitHub地址",
+      "animation": "** Logo脉冲 → 功能标签展开 → GitHub地址弹出",
+      "key_elements": [
+        "** 技能名称",
+        "功能标签云",
+        "开源信息"
+      ],
+      "voiceover": "HTML Video Creator，开源免费。\n关注我，教你从零开始做技术视频！",
+      "subtitle": "HTMLVideoCreator，开源免费"
+    }
+  ]
+}

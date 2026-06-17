@@ -2,6 +2,13 @@
 
 ## 配音文案格式（voiceover_text.txt）
 
+> **脚本驱动流程说明**：`voiceover_text.txt` 现在是 `script.json` 的派生物
+> （由 `npx worm-html-2-video script vo` 生成），其中的时间标记为估算值，
+> 仅供人工阅读。权威数据源是 `script.json` 的 `voiceover` / `subtitle` 字段；
+> 每个场景的真实时长由 `npx worm-html-2-video voiceover` 测量并写入 `scene_timings.json`，
+> 再由 `npx worm-html-2-video sync` 回填到 `video.html` 的 `data-duration`。
+> 因此文案创作时**无需精确估算时间**，只需控制字数与语速匹配即可。
+
 ### 标准格式
 
 ```
@@ -26,15 +33,19 @@ Agent 开发卡住不干活也不知道，半天的时间就浪费了。
 | 场景分隔 | 空行 | 场景之间空一行 |
 | 标点 | 中文标点 | 句号、逗号、冒号等 |
 
-### 时间标记与场景 `data-duration` 的关系
+### 时间标记与场景 `data-duration` 的关系（派生值，仅供参考）
+
+`voiceover_text.txt` 的时间标记是 `script_tool.py` 按语速估算生成的，
+`data-duration` 的真实值由 `sync_html.py` 根据 `scene_timings.json` 写入：
 
 ```
-HTML: <div class="scene" data-duration="6">  ← 场景时长6秒
-文案: [场景2: 4-10s]                        ← 从第4秒到第10秒
-                                            ← 差值必须等于 data-duration
+script.json: {"voiceover": "..."}        ← 只写文案，不写时间
+voiceover.py → scene_timings.json: {"duration": 6.2}  ← 真实配音时长
+sync_html.py → video.html: data-duration="6.2"        ← 据时长回填
 ```
 
-**核心约束**：文案时间范围 = 前面所有场景时长之和 → 当前累加值
+**核心约束**：`data-duration` = 该场景配音真实时长（末场景加 tail buffer），
+由工具链自动保证，无需人工对齐时间标记。
 
 ---
 
@@ -86,45 +97,96 @@ HTML: <div class="scene" data-duration="6">  ← 场景时长6秒
 
 ---
 
-## 字幕生成规范
+## 字幕规范（内嵌于 HTML）
 
-### SRT 文件要求
+字幕不再单独生成 SRT 文件,而是直接写入 `video.html` 的 `SUBTITLES` 数组。
+HTML 中预留字幕条 DOM,渲染循环按当前时间切换文本,截图时随帧捕获。
 
-```srt
-1
-00:00:00,500 --> 00:00:03,800
-为了不看 AI 写代码
-我写了三个方案
+### SUBTITLES 数据格式
 
-2
-00:00:04,200 --> 00:00:07,100
-AI 在写代码，你在疯狂切屏
+```javascript
+const SUBTITLES = [
+  { start: 0.3, end: 3.7, text: "为了不看 AI 写代码\n我写了三个方案" },
+  { start: 4.2, end: 7.1, text: "AI 在写代码，你在疯狂切屏" },
+];
 ```
+
+- `start` / `end` 单位为秒,在全局时间轴上
+- `text` 字符串中 `\n` 触发换行
+- 数组可为空 (无字幕视频)
 
 ### 字幕时间轴原则
 
-1. **场景首留白**：字幕起始 = 场景开始 + 0.3s（等画面稳定）
-2. **场景尾留白**：字幕结束 = 场景结束 - 0.3s（避免切换时残留）
-3. **句间间隔**：两条字幕间隔 ≥ 0.2s（避免视觉混淆）
-4. **最短时长**：单条字幕 ≥ 1.5s（确保读者看清）
-5. **最长时长**：单条字幕 ≤ 5.0s（避免观众失去耐心）
+1. **场景首留白**: 字幕起始 = 场景开始 + 0.3s (等画面稳定)
+2. **场景尾留白**: 字幕结束 = 场景结束 - 0.3s (避免切换时残留)
+3. **句间间隔**: 两条字幕间隔 ≥ 0.2s (避免视觉混淆)
+4. **最短时长**: 单条字幕 ≥ 1.5s (确保读者看清)
+5. **最长时长**: 单条字幕 ≤ 5.0s (避免观众失去耐心)
 
 ### 字幕换行规则
 
 | 规则 | 说明 | 示例 |
 |------|------|------|
-| 每行最多 20 字符 | 超出则自动换行 | `Agent开发卡住不干活\n也不知道` |
+| 每行最多 20 字符 | 超出则 `\n` 换行 | `Agent开发卡住不干活\n也不知道` |
 | 优先标点处断行 | 逗号、句号、顿号 | `不占资源、\n实时响应` |
 | 最多 2 行 | 超过则拆分为多条字幕 | — |
 | 英文不拆词 | 整词保持在同一行 | `Rust + Tauri v2` 不换行 |
 
-### 字幕与配音对齐验证
+### 自动从 voiceover_text.txt 导出
+
+```bash
+python lib/generate_video.py --export-subtitles subtitles.js
+# 把输出的 JS 数组直接粘贴到 video.html 的 SUBTITLES 位置
+```
+
+底层算法 (与原 SRT 模式相同):
+- 语速 4.5 字/秒
+- 按句号/感叹号分割场景文案
+- 按字符数比例分配场景内时长
+- 最短 1.5s,最长 5.0s,句间 0.2s
+
+### 字幕文本与配音文案的关系
+
+| 文件 | 内容 | 时间标记 | 用途 |
+|------|------|----------|------|
+| `voiceover_text.txt` | 配音文案 | `[场景N: Xs-Ys]` | TTS 输入 |
+| `video.html` SUBTITLES | 显示文本 | `{ start, end, text }` | 视频显示 |
+| `subtitle.srt` (旧) | 显示文本 | `HH:MM:SS,mmm` | 第三方平台上传 (可选) |
+
+理想情况下,`SUBTITLES[i].text` 与 `voiceover_text.txt` 中对应句完全一致。
+若配音算法改写文案 (如 "5fps" → "5 f p s"),需手动同步 `SUBTITLES` 文本。
+
+### 字幕条 CSS 速查
+
+```css
+.subtitle-bar {
+  position: absolute;
+  left: 60px; right: 60px;
+  bottom: 100px;            /* 抖音 1080x1920: 操作栏上方 */
+  min-height: 80px;
+  padding: 18px 32px;
+  background: rgba(0, 0, 0, 0.72);
+  border-radius: 14px;
+  color: #ffffff;
+  font-size: 42px;          /* 视频压缩后仍清晰 */
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  z-index: 9999;
+  opacity: 0;               /* 默认隐藏 */
+  white-space: pre-line;    /* 支持 \n */
+  word-break: break-word;
+  box-sizing: border-box;
+  transition: opacity 0.12s linear;
+}
+```
+
+### 字幕与配音对齐验证 (Python)
 
 ```python
 def verify_subtitle_sync(subtitles, segments):
-    """验证字幕是否落在正确的场景时间范围内"""
+    """验证字幕时间是否落在所属场景内"""
     for sub in subtitles:
-        # 找到所属场景
         matched = False
         for seg in segments:
             if seg['start'] <= sub['start'] and sub['end'] <= seg['end'] + 0.5:
@@ -133,6 +195,13 @@ def verify_subtitle_sync(subtitles, segments):
         if not matched:
             print(f"⚠️ 字幕 '{sub['text'][:10]}...' 不在任何场景范围内")
 ```
+
+### 何时需要手动调字幕
+
+- 配音生成后,实际时长与预估偏差较大 (>0.5s)
+- 某些句 TTS 发音不清晰,需缩短单条字幕
+- 场景需要更舒缓的节奏,主动拉长字幕时长
+- 关键名词/数字需要加粗或颜色突出 (用 `<span style="color:#00ff88">` 包裹)
 
 ---
 

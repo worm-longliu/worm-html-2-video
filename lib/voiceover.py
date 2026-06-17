@@ -2,9 +2,9 @@
 """
 worm-html-2-video 按场景配音工具
 
-读取 script.json,对每个场景单独调用 Edge-TTS 合成配音,利用
-WordBoundary 事件记录每个场景的精确配音时长,拼接出完整 voiceover.mp3,
-并写入 scene_timings.json(每个场景的 start/end 秒数)。
+读取 script.json,对每个场景单独调用 Edge-TTS 合成配音,用 ffprobe
+测量每段真实时长(WordBoundary 不可靠,会返回 0),用 ffmpeg concat 拼接成
+完整 voiceover.mp3,并写入 scene_timings.json(每个场景的 start/end 秒数)。
 
 scene_timings.json 是后续 lib/sync_html.py 调整 video.html 时长的依据。
 

@@ -4,9 +4,14 @@
   "type": "module",
   "description": "HTML Video Creator 技能介绍视频",
   "scripts": {
+    "script:html": "python ../../lib/script_tool.py html",
+    "script:vo": "python ../../lib/script_tool.py vo",
+    "script:doc": "python ../../lib/script_tool.py doc",
+    "voiceover": "python ../../lib/voiceover.py",
+    "sync": "python ../../lib/sync_html.py",
     "capture": "node ../../lib/capture.mjs",
     "generate": "python ../../lib/generate_video.py",
-    "all": "node ../../lib/capture.mjs && python ../../lib/generate_video.py"
+    "all": "python ../../lib/script_tool.py html && python ../../lib/voiceover.py && python ../../lib/sync_html.py && node ../../lib/capture.mjs && python ../../lib/generate_video.py"
   },
   "dependencies": {
     "playwright": "^1.40.0"

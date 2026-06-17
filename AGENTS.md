@@ -13,19 +13,25 @@ These rules take priority over style or convention. Violations block merges.
 - **File writes** — UTF-8, no BOM. Do not write files larger than 500 lines in a single operation; split into chunks.
 
 ## Project Structure & Module Organization
-- `bin/cli.js` — Node CLI entry point exposing `npx worm-html-2-video init|capture|generate`.
+- `bin/cli.js` — Node CLI entry point exposing `npx worm-html-2-video init|script|voiceover|sync|capture|generate`.
+- `lib/script_tool.py` — validate `script.json`, derive `voiceover_text.txt`/`script.md`, generate `video.html` skeleton (Python 3).
+- `lib/voiceover.py` — per-scene Edge-TTS + ffprobe duration measurement → `voiceover.mp3` + `scene_timings.json` (Python 3).
+- `lib/sync_html.py` — adjust `video.html` `data-duration` + `SUBTITLES` to real voiceover timings (Python 3).
 - `lib/capture.mjs` — Playwright frame capture + FFmpeg encode (Node, ESM).
-- `lib/generate_video.py` — Edge-TTS voiceover, SRT subtitles, FFmpeg mux and burn-in (Python 3).
+- `lib/generate_video.py` — merge existing `voiceover.mp3` into final MP4 (Python 3); legacy `--voiceover-only` still synthesizes from `voiceover_text.txt`.
 - `templates/` — Reusable scene HTML (`scene-title.html`, `scene-comparison.html`, `scene-cta.html`).
 - `docs/` and `skill/` — Technical docs and Codex skill spec; keep them in sync.
 - `examples/` — Sample projects (`minimal`, `full-demo`, `skill-intro`, `project-intro`); not shipped in the npm package.
-- `package.json` exposes `npm run capture` and `npm run generate`.
+- `package.json` exposes `npm run capture` and `npm run generate`; example projects add `script:html`/`voiceover`/`sync`.
 
 ## Build, Test, and Development Commands
-No build step; the package ships as-is. Run the pipeline with:
-- `npx worm-html-2-video init` — scaffold `video.html` and `voiceover_text.txt` in the cwd.
-- `node lib/capture.mjs [--html <p>] [--output <p>] [--fps N]` — render frames and encode `video_html.mp4`.
-- `python lib/generate_video.py [--voiceover-only | --subtitles-only]` — voiceover, subtitles, and `video_final.mp4`.
+No build step; the package ships as-is. Script-driven pipeline (each step is a human review gate):
+- `npx worm-html-2-video init` — scaffold `script.json` (scenes + subtitles + voiceover) in the cwd.
+- `npx worm-html-2-video script <validate|vo|doc|html>` — validate script, derive `voiceover_text.txt`/`script.md`, or generate `video.html` skeleton.
+- `npx worm-html-2-video voiceover` — per-scene Edge-TTS, measure each scene duration → `voiceover.mp3` + `scene_timings.json`.
+- `npx worm-html-2-video sync` — adjust `video.html` `data-duration` + `SUBTITLES` to real voiceover timings.
+- `npx worm-html-2-video capture [--html <p>] [--output <p>] [--fps N]` — render frames and encode `video_html.mp4`.
+- `npx worm-html-2-video generate` — merge existing `voiceover.mp3` → `video_final.mp4` (use `--no-voiceover` to skip TTS).
 
 Prereqs: Node 18+, Python 3.8+, `playwright` (+`npx playwright install chromium`), `edge-tts`, `ffmpeg` 5+ on `PATH`.
 
@@ -33,11 +39,11 @@ Prereqs: Node 18+, Python 3.8+, `playwright` (+`npx playwright install chromium`
 - Node: ES modules, 2-space indent, single quotes, semicolons, `const`-first.
 - Python 3.8+: 4-space indent, PEP 8, module- and function-level docstrings (see `lib/generate_video.py`).
 - Source filenames are lowercase: `lib/capture.mjs`, `lib/generate_video.py`, `templates/scene-*.html`.
-- Keep fixed artifact names: `video.html`, `voiceover_text.txt`, `voiceover.mp3`, `subtitle.srt`, `video_html.mp4`, `video_final.mp4`, `frames/` — scripts depend on them.
+- Keep fixed artifact names: `script.json` (authoritative source), `video.html`, `voiceover_text.txt` (derived), `voiceover.mp3`, `scene_timings.json`, `video_html.mp4`, `video_final.mp4`, `frames/` — scripts depend on them. (`subtitle.srt`/`subtitle.ass` are legacy; subtitles now live in `video.html``s SUBTITLES array.)
 - No ESLint/Prettier/Ruff config is committed; match the style of the surrounding file.
 
 ## Testing Guidelines
-- No automated tests. Validation is end-to-end — run the 7-step workflow and inspect `video_final.mp4`.
+- No automated tests. Validation is end-to-end — run the script-driven workflow (`init → script html → voiceover → sync → capture → generate`) and inspect `video_final.mp4`.
 - When changing `lib/capture.mjs` or `lib/generate_video.py`, regenerate at least `examples/minimal` and verify resolution, duration, and subtitle sync.
 - Add a new example under `examples/<name>/` for non-trivial features, mirroring `examples/minimal`.
 
@@ -48,15 +54,15 @@ Prereqs: Node 18+, Python 3.8+, `playwright` (+`npx playwright install chromium`
 - Verify `npx worm-html-2-video init` still scaffolds a working project before requesting review.
 
 ## Architecture Overview
-Pipeline split: `lib/capture.mjs` renders HTML → PNG → H.264 MP4 (5 fps sampling → 30 fps output); `lib/generate_video.py` handles Edge-TTS → SRT → ASS burn-in. Both share `video.html` and `frames/`, so preserve the `window.__hyperframes` API in HTML templates.
+Script-driven pipeline: `script.json` is the sole source of truth (scenes + subtitles + voiceover, no timings). `lib/script_tool.py` derives `video.html` (skeleton with SUBTITLES placeholder + estimated `data-duration`). `lib/voiceover.py` synthesizes each scene and measures its real duration via ffprobe → `scene_timings.json`. `lib/sync_html.py` writes those durations back into `video.html`. `lib/capture.mjs` renders HTML → PNG → H.264 MP4 (5 fps sampling → 30 fps output); `lib/generate_video.py` merges the existing `voiceover.mp3` (subtitles are baked into frames via the SUBTITLES array, no SRT/ASS burn-in). Preserve the `window.__hyperframes` API in HTML templates.
 
 ## Local Skills
 
-Project-local Codex skills live under `.codex/skills/`. Read the matching `SKILL.md` before touching the related area.
+Project-local Codex skills live under `.agent/skills/`. Read the matching `SKILL.md` before touching the related area.
 
 | When you are... | Load skill |
 |---|---|
-| Debugging a Playwright / Edge-TTS / FFmpeg pipeline issue | `.codex/skills/debug-pipeline/SKILL.md` |
-| Reviewing a non-trivial change or running `/discuss` | `.codex/skills/architecture-review/SKILL.md` |
+| Debugging a Playwright / Edge-TTS / FFmpeg pipeline issue | `.agent/skills/debug-pipeline/SKILL.md` |
+| Reviewing a non-trivial change or running `/discuss` | `.agent/skills/architecture-review/SKILL.md` |
 
-> The `skill/` directory at the repo root is a **user-facing** Codex skill (teaches AI agents how to *use* the tool). It is separate from the developer-facing `.codex/skills/` system above.
+> The `skill/` directory at the repo root is a **user-facing** Codex skill (teaches AI agents how to *use* the tool). It is separate from the developer-facing `.agent/skills/` system above.
