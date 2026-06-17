@@ -115,29 +115,45 @@ def compute_subtitles(script, timings, durations):
     return entries
 
 
-SCENE_DURATION_RE = re.compile(
-    r'(<div\s+id="scene-\d+"\s+class="scene"\s+data-duration=")[\d.]+(")'
-)
+# Match any <div ...> opening tag that contains id="scene-N", class="scene"
+# (possibly with other classes), and data-duration="..." in any order.
+SCENE_TAG_RE = re.compile(r'<div\b[^>]*>', re.DOTALL)
+DATA_DURATION_RE = re.compile(r'(data-duration=")[\d.]+(")')
+
 
 
 def replace_scene_durations(html, durations):
-    """Replace each scene's data-duration in order with computed durations."""
-    matches = list(SCENE_DURATION_RE.finditer(html))
-    if len(matches) != len(durations):
-        print(f"⚠️  Found {len(matches)} scene tags but {len(durations)} timings; "
-              f"updating the first {min(len(matches), len(durations))}")
+    """Replace each scene's data-duration in order with computed durations.
+
+    Matches <div> tags whose attributes include id="scene-N", class containing
+    'scene', and data-duration, regardless of attribute order.
+    """
+    scene_tags = []
+    for m in SCENE_TAG_RE.finditer(html):
+        tag = m.group(0)
+        if re.search(r'id="scene-\d+"', tag) and re.search(r'class="[^"]*\bscene\b', tag) and 'data-duration=' in tag:
+            scene_tags.append(m)
+    if len(scene_tags) != len(durations):
+        print(f"⚠️  Found {len(scene_tags)} scene tags but {len(durations)} timings; "
+              f"updating the first {min(len(scene_tags), len(durations))}")
     out = html
     offset_adj = 0
-    for i, m in enumerate(matches):
+    matched = 0
+    for i, m in enumerate(scene_tags):
         if i >= len(durations):
             break
         new_dur = f"{durations[i]:.1f}"
-        start = m.start() + offset_adj
-        end = m.end() + offset_adj
-        replacement = m.group(1) + new_dur + m.group(2)
-        out = out[:start] + replacement + out[end:]
-        offset_adj += len(replacement) - (m.end() - m.start())
-    return out, len(matches)
+        tag_start = m.start() + offset_adj
+        tag_end = m.end() + offset_adj
+        tag_text = out[tag_start:tag_end]
+        dm = DATA_DURATION_RE.search(tag_text)
+        if not dm:
+            continue
+        new_tag = tag_text[:dm.start()] + dm.group(1) + new_dur + dm.group(2) + tag_text[dm.end():]
+        out = out[:tag_start] + new_tag + out[tag_end:]
+        offset_adj += len(new_tag) - (tag_end - tag_start)
+        matched += 1
+    return out, matched
 
 
 SUBTITLES_RE = re.compile(

@@ -187,6 +187,9 @@ async def generate_voiceover(script, voice, rate, scene_gap, out_mp3, out_timing
 
 def main():
     opts = parse_args()
+    # Pre-flight: ffmpeg/ffprobe and edge-tts are mandatory for voiceover.
+    import prereqs
+    prereqs.check_all(require_ffmpeg=True, require_tts=True)
     script_path = opts['script'] or os.path.join(os.getcwd(), 'script.json')
     if not os.path.exists(script_path):
         print(f"❌ Script not found: {script_path}")

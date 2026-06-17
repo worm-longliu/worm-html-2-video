@@ -29,7 +29,6 @@ import asyncio
 import re
 import sys
 import json
-import edge_tts
 
 # Fix Windows GBK encoding issue with emoji
 if sys.platform == 'win32':
@@ -150,6 +149,11 @@ def parse_voiceover_segments(filepath):
 # ===== 1. Generate voiceover =====
 async def generate_voiceover():
     """Generate voiceover MP3 from voiceover_text.txt using Edge-TTS."""
+    try:
+        import edge_tts
+    except ImportError:
+        print("❌ edge-tts not installed. Run: pip install edge-tts")
+        sys.exit(1)
     segments = parse_voiceover_segments(VOICEOVER_FILE)
     full_text = '\n'.join([seg['text'] for seg in segments])
 
@@ -314,6 +318,9 @@ if __name__ == '__main__':
         print(f"   Use this duration to adjust scene data-duration in video.html")
         sys.exit(0)
 
+    # Pre-flight: ffmpeg is mandatory for video compositing.
+    import prereqs
+    prereqs.check_all(require_ffmpeg=True, require_tts=False)
     print("🎬 worm-html-2-video — Generate")
     print("════════════════════════════════════")
     print(f"   Voiceover: {VOICEOVER_FILE}")

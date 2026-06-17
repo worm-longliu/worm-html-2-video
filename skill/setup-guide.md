@@ -12,7 +12,7 @@
 | Python 3.8+ | 运行配音+字幕生成脚本 | 官网 | 全局 |
 | FFmpeg 5.0+ | 视频合成、配音拼接 | winget / 手动 | 全局 |
 | edge-tts | AI 语音合成 | pip | 全局 |
-| Playwright | 浏览器截图引擎 | npm | 项目 |
+| Playwright | 浏览器截图引擎 | npm | 全局 |
 
 ---
 
@@ -126,13 +126,15 @@ python -c "import edge_tts; print('OK')"
 
 ---
 
-## 5. Playwright（项目级）
+## 5. Playwright + Chromium（全局）
+
+全局安装一次,所有项目/技能复用,无需在每个项目重复 `npm install`。
 
 ```bash
-# 在项目目录下执行
-npm install
+# 全局安装 playwright npm 包（一次,所有项目可用）
+npm install -g playwright
 
-# 下载 Chromium 浏览器（首次需要，约 150MB）
+# 下载 Chromium 浏览器（首次需要，约 150MB，装到用户级全局目录）
 npx playwright install chromium
 ```
 
@@ -200,10 +202,10 @@ if %ERRORLEVEL% NEQ 0 (
     echo [OK] FFmpeg
 )
 
-REM === 安装 npm 依赖 ===
-echo [..] 安装 npm 依赖...
-call npm install
-echo [OK] npm 依赖
+REM === 全局安装 Playwright (所有项目复用) ===
+echo [..] 全局安装 playwright...
+call npm install -g playwright
+echo [OK] playwright (全局)
 
 REM === 下载 Playwright Chromium ===
 echo [..] 下载 Playwright Chromium（约 150MB，首次）...
@@ -260,7 +262,9 @@ set PLAYWRIGHT_BROWSERS_PATH=C:\browsers
 npx playwright install chromium
 ```
 
-### Q: 只想在当前项目安装，不想全局污染
+### Q: 只想在单个项目安装，不想全局污染
+
+默认推荐全局安装（一次装，所有项目/技能复用）。若确实需要项目级隔离：
 
 ```bash
 # Python: 使用虚拟环境
@@ -268,6 +272,7 @@ python -m venv venv
 venv\Scripts\activate
 pip install edge-tts
 
-# Node: npm 默认安装在项目 node_modules
-npm install
+# Node: 在项目目录装到本地 node_modules
+npm install playwright
+npx playwright install chromium
 ```
