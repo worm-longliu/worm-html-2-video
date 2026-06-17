@@ -45,10 +45,36 @@ def _run_ok(cmd):
         return False
 
 
+def _run_npm_ok(cmd_str):
+    """Like _run_ok but via shell=True — for npm/npx which on Windows are
+    .cmd/.ps1 scripts that subprocess list-form cannot launch directly."""
+    try:
+        r = subprocess.run(cmd_str, shell=True, capture_output=True, text=True, timeout=60)
+        return r.returncode == 0
+    except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
+        return False
+
+
 def _run_visible(cmd, cwd=None):
     """Run cmd with inherited stdio (user sees live output). Return (ok, msg)."""
     try:
         r = subprocess.run(cmd, timeout=600, cwd=cwd)
+        if r.returncode == 0:
+            return True, 'ok'
+        return False, f'exit code {r.returncode}'
+    except FileNotFoundError:
+        return False, 'command not found'
+    except subprocess.TimeoutExpired:
+        return False, 'timeout'
+    except OSError as e:
+        return False, str(e)
+
+
+def _run_visible_shell(cmd_str, cwd=None):
+    """Like _run_visible but via shell=True — for npm/npx which on Windows
+    are .cmd/.ps1 scripts that subprocess list-form cannot launch directly."""
+    try:
+        r = subprocess.run(cmd_str, shell=True, timeout=600, cwd=cwd)
         if r.returncode == 0:
             return True, 'ok'
         return False, f'exit code {r.returncode}'
@@ -100,16 +126,17 @@ def _auto_install_playwright():
     不依赖任何项目的 node_modules。浏览器则由 _auto_install_chromium
     装到用户级全局目录 (Playwright 默认 ms-playwright)。
     """
-    return _run_visible(['npm', 'install', '-g', 'playwright'])
+    return _run_visible_shell('npm install -g playwright')
 
 
 def _auto_install_chromium():
     """Try to auto-install Chromium for Playwright."""
-    return _run_visible(['npx', 'playwright', 'install', 'chromium'])
+    return _run_visible_shell('npx playwright install chromium')
 
 
+# ffmpeg 不放入 AUTO_INSTALLERS: 其安装需下载 ~100MB 大包 (winget 走
+# GitHub, 国内常超时卡死)。检测到缺失时直接打印手工全局安装指引,交给用户。
 AUTO_INSTALLERS = {
-    'ffmpeg': _auto_install_ffmpeg,
     'edge-tts': _auto_install_edge_tts,
     'playwright': _auto_install_playwright,
     'chromium': _auto_install_chromium,
@@ -139,7 +166,10 @@ INSTALL_GUIDES = {
   验证:     重新打开终端 → node --version
 """,
     'ffmpeg': """
-❌ FFmpeg 自动安装失败(已重试 {attempts} 次),需手工全局安装。
+❌ 未检测到 FFmpeg,需手工全局安装。
+
+  (FFmpeg 安装包约 100MB,自动下载易超时,故本工具不自动安装,
+   请按下方任一方式手工全局安装一次,所有项目/技能即可复用。)
 
 【手工全局安装 — 方式 A: scoop (推荐)】
   (若已装 scoop) scoop install ffmpeg
@@ -234,7 +264,7 @@ def _check_playwright():
     if global_root and os.path.isdir(os.path.join(global_root, 'playwright')):
         return True, 'playwright (global npm: ' + global_root + ')'
     # 2) npx 可解析 (含全局 bin 链接)。
-    if _run_ok(['npx', '--no-install', 'playwright', '--version']):
+    if _run_npm_ok('npx --no-install playwright --version'):
         return True, 'playwright via npx (global)'
     # 3) 项目本地兜底 (历史项目仍可工作)。
     here = os.path.dirname(os.path.abspath(__file__))
@@ -246,9 +276,13 @@ def _check_playwright():
 
 
 def _npm_global_root():
-    """Return the global node_modules root (npm root -g), or None."""
+    """Return the global node_modules root (npm root -g), or None.
+
+    npm 在 Windows 上是 .cmd/.ps1 脚本,subprocess 列表形式调用会
+    FileNotFoundError,故用 shell=True。
+    """
     try:
-        r = subprocess.run(['npm', 'root', '-g'], capture_output=True, text=True, timeout=15)
+        r = subprocess.run('npm root -g', shell=True, capture_output=True, text=True, timeout=15)
         if r.returncode == 0:
             return r.stdout.strip()
     except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
