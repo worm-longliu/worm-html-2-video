@@ -9,6 +9,20 @@ description: Create and manage HTML-based vertical video projects for Douyin/Tik
 
 ## 快速开始
 
+### 安装 Skill 到 Codex
+
+通过 `npx` 从 GitHub 或 Gitee 任一仓库安装本 skill（国内网络优先 Gitee）：
+
+```bash
+# 方式一：从 GitHub 安装
+npx github:worm-longliu/worm-html-2-video install-skill
+
+# 方式二：从 Gitee 安装（国内镜像）
+npx https://gitee.com/liulong_oschina/worm-html-2-video.git install-skill
+```
+
+安装目标：`$CODEX_HOME/skills/html-video-creator/`（默认 `~/.codex/skills/html-video-creator/`）。安装后重启 Codex 即可加载。
+
 ### 项目结构
 
 ```

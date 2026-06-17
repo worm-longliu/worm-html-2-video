@@ -48,26 +48,110 @@ npx worm-html-2-video capture
 npx worm-html-2-video generate
 ```
 
-### 环境要求
+### 安装 Skill 到 Codex
 
-| 工具 | 版本 | 安装方式 |
-|------|------|----------|
-| Node.js | 18+ | [nodejs.org](https://nodejs.org) |
-| Python | 3.8+ | [python.org](https://python.org) |
-| FFmpeg | 5.0+ | `scoop install ffmpeg` 或 [ffmpeg.org](https://ffmpeg.org) |
-| edge-tts | latest | `pip install edge-tts` |
-| Playwright | latest | `npm install playwright` |
+本项目内置一份 Codex skill（`skill/` 目录），安装后 Codex 即可识别 `html-video-creator` 技能并辅助你制作 HTML 视频。可通过 GitHub 或 Gitee 两个仓库任一安装（国内网络优先 Gitee）：
+
+```bash
+# 方式一：从 GitHub 安装（npx 拉取并执行 install-skill）
+npx github:worm-longliu/worm-html-2-video install-skill
+
+# 方式二：从 Gitee 安装（国内镜像，速度更快）
+npx https://gitee.com/liulong_oschina/worm-html-2-video.git install-skill
+
+# 方式三：先安装 npm 包再执行（适合已发布到 npm 后）
+npx worm-html-2-video install-skill
+```
+
+安装目标：`$CODEX_HOME/skills/html-video-creator/`（默认 `~/.codex/skills/html-video-creator/`）。
+安装后重启 Codex 即可加载该 skill。
+
+### 环境要求与自动安装(失败3次后手工兜底)
+
+本工具不打包 FFmpeg / edge-tts / Chromium,以下依赖需全局可用后方可运行。
+推荐先执行环境自检:
+
+```bash
+npx worm-html-2-video doctor
+```
+
+`doctor`(以及 `voiceover` / `capture` / `generate` 命令)对缺失依赖的处理遵循
+**两段式优先级**:
+
+1. **自动安装优先** —— 检测到缺失项时,先尝试自动安装:
+   - FFmpeg → `winget install Gyan.FFmpeg`
+   - edge-tts → `pip install --upgrade edge-tts`
+   - Chromium → `npx playwright install chromium`
+2. **失败3次后手工兜底** —— 自动安装最多重试 3 次;若仍失败,则打印
+   **手工全局安装指引**(明确的下载来源、安装目标路径、PATH 配置步骤、验证命令),
+   随后退出。你按指引手工全局安装后重开终端即可。
+
+> 即:能自动装的自动装;自动装不上(网络/权限/包管理器缺失等)才让你手工装,
+> 且手工装一律全局、并给出从哪下、装到哪、怎么配 PATH。
+
+#### 1. Node.js 18+(必需)
+
+- **下载来源:** https://nodejs.org/zh-cn/download (选 LTS 版)
+- **安装目标(默认):** `C:\Program Files\nodejs\` (安装器自动加入系统 PATH)
+- **验证:** 重开终端 → `node -v`
+
+#### 2. Python 3.8+(必需)
+
+- **下载来源:** https://www.python.org/downloads/ (勾选 "Add Python to PATH")
+- **安装目标(默认):** `C:\Program Files\Python312\python.exe`
+- **验证:** 重开终端 → `python --version`
+
+#### 3. FFmpeg 5.0+(必需,本工具不打包)
+
+> capture(截图编码)与 generate(音频合成)都依赖 `ffmpeg`/`ffprobe`,必须全局可用。
+
+**方式 A — scoop(推荐,自动配 PATH):**
+```bash
+scoop install ffmpeg
+# 安装目标: %USERPROFILE%\scoop\shims\ffmpeg.exe
+# scoop 自动把 shim 加入 PATH,无需手动配置。
+```
+
+**方式 B — 官方包(全局 PATH 手动配置):**
+1. 下载来源: https://www.gyan.dev/ffmpeg/builds/ → 下载 `ffmpeg-release-essentials.zip`
+2. 解压目标: `C:\ffmpeg\` (内含 `bin\ffmpeg.exe`、`bin\ffprobe.exe`)
+3. 加入 PATH: 把 `C:\ffmpeg\bin` 添加到**系统环境变量 Path**
+   (Win10/11: 设置 → 系统 → 关于 → 高级系统设置 → 环境变量 →
+   系统变量 Path → 新建 → `C:\ffmpeg\bin` → 确定)
+4. 验证: 重新打开终端 → `ffmpeg -version` 与 `ffprobe -version`
+
+**macOS:** `brew install ffmpeg` (安装到 `/opt/homebrew/bin/ffmpeg`)
+**Linux:** `sudo apt install ffmpeg` 或从 https://ffmpeg.org/download.html 编译
+
+#### 4. edge-tts(必需,配音步骤)
+
+- **安装方式(全局,随 Python):** `pip install edge-tts`
+- **安装目标:** Python 的 site-packages(用户级:`%APPDATA%\Python\Python312\site-packages`)
+- **验证:** `python -c "import edge_tts; print('ok')"`
+- 缺失时 `voiceover` 与 `generate` 也会提示并退出。
+
+#### 5. Playwright + Chromium(必需,截图步骤)
+
+```bash
+npm install playwright           # 项目本地依赖
+npx playwright install chromium  # 下载 Chromium 浏览器二进制
+```
+- **Chromium 安装目标:** `%USERPROFILE%\AppData\Local\ms-playwright\chromium-<版本>\`
+- `npm install playwright` 也可全局:`npm install -g playwright`,但项目内已有依赖无需全局。
+- **验证:** `npx playwright --version`
 
 ### CLI 命令
 
 | 命令 | 说明 |
 |------|------|
 | `npx worm-html-2-video init` | 在当前目录创建 `script.json` |
+| `npx worm-html-2-video doctor` | 检查环境依赖,缺失项打印手工全局安装指引 |
 | `npx worm-html-2-video script <sub>` | 脚本工具：`validate` / `vo` / `doc` / `html` |
 | `npx worm-html-2-video voiceover` | 按场景配音 → `voiceover.mp3` + `scene_timings.json` |
 | `npx worm-html-2-video sync` | 据配音时长调整 `video.html`（data-duration + SUBTITLES） |
 | `npx worm-html-2-video capture` | Playwright 截图 → `video_html.mp4` |
 | `npx worm-html-2-video generate` | 合成配音 → `video_final.mp4`（复用已有 voiceover.mp3） |
+| `npx worm-html-2-video install-skill` | 将内置 skill/ 安装到本地 Codex skills 目录 |
 
 **script 子命令：** `validate`（校验）`vo`（派生 voiceover_text.txt）`doc`（派生 script.md）`html`（生成 video.html 骨架）
 **voiceover 选项：** `--script <p>` `--output <p>` `--timings <p>` `--voice <name>` `--rate <rate>` `--scene-gap <s>`
@@ -88,11 +172,8 @@ worm-html-2-video/
 │   ├── script_tool.py           # 脚本校验/派生(voiceover_text.txt,script.md)/生成HTML骨架
 │   ├── voiceover.py             # 按场景配音+测量时长 → voiceover.mp3 + scene_timings.json
 │   ├── sync_html.py             # 据配音时长调整 video.html(data-duration + SUBTITLES)
-│   ├── script_tool.py           # 脚本校验/派生vo与doc/生成HTML骨架
-│   ├── voiceover.py             # 按场景Edge-TTS配音+记录时长→scene_timings.json
-│   ├── sync_html.py             # 据配音时长更新video.html的data-duration与SUBTITLES
-│   ├── capture.mjs               # Playwright 截图（通用版）
-│   └── generate_video.py         # 合成配音→video_final.mp4（复用已有voiceover.mp3）
+│   ├── capture.mjs              # Playwright 截图（通用版）
+│   └── generate_video.py        # 合成配音→video_final.mp4（复用已有voiceover.mp3）
 ├── docs/                         # 技术文档
 │   ├── css-standards.md          # CSS 深色主题完整规范
 │   ├── video-copywriting.md      # 文案与字幕规范
