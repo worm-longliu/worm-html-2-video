@@ -26,6 +26,32 @@ body {
   border-bottom: 300px solid rgba(255,0,0,0.06);
 }
 
+/* ===== 字幕条 (内置,截图时直接捕获) ===== */
+.subtitle-bar {
+  position: absolute;
+  left: 60px; right: 60px;
+  bottom: 100px;
+  min-height: 80px;
+  padding: 18px 32px;
+  background: rgba(0, 0, 0, 0.72);
+  border-radius: 14px;
+  color: #ffffff;
+  font-size: 42px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: pre-line;
+  word-break: break-word;
+  box-sizing: border-box;
+  transition: opacity 0.12s linear;
+}
+
 /* ===== 场景容器 ===== */
 .scene {
   position: absolute;
@@ -421,6 +447,9 @@ body {
 <!-- 安全区域参考线 -->
 <div class="safe-zone"></div>
 
+<!-- 字幕条:截图时直接捕获,无需 ffmpeg 烧录 -->
+<div id="subtitle-bar" class="subtitle-bar"></div>
+
 <!-- 场景1: 开场Hook (0-5s) -->
 <div id="scene-1" class="scene" data-duration="5">
   <div class="anim chat-bubble" data-delay="0" data-dur="0.5">
@@ -625,6 +654,42 @@ body {
 </div>
 
 <script>
+// ===== 字幕数据 (秒,全局时间轴) =====
+// 与 voiceover_text.txt 文案对齐,直接写入 HTML,无需生成 SRT/ASS
+const SUBTITLES = [
+  { start: 0.3, end: 4.5, text: "一句话，让AI帮你做出抖音视频\n全过程只要2分钟" },
+  { start: 5.3, end: 8.1, text: "你只需要告诉AI：\n帮我做个技能介绍视频" },
+  { start: 8.3, end: 11.7, text: "AI立刻开始分析需求：\n目标平台、视频时长、场景规划" },
+  { start: 12.3, end: 15.5, text: "AI的思考过程：\n先规划分镜，计算每场景时长" },
+  { start: 15.7, end: 18.7, text: "再按语速匹配文案字数，\n确保音画同步" },
+  { start: 19.3, end: 23.1, text: "AI自动生成代码：深色主题CSS、\n帧驱动动画、安全区域适配" },
+  { start: 23.3, end: 26.7, text: "每一行都符合视频制作规范" },
+  { start: 27.3, end: 30.5, text: "全自动流水线启动：\n截图60秒、配音10秒" },
+  { start: 30.7, end: 34.7, text: "字幕自动对齐、\nFFmpeg一键合成" },
+  { start: 35.3, end: 38.5, text: "AI自动验证：\n分辨率1080乘1920，音画同步" },
+  { start: 38.7, end: 41.7, text: "字幕无重叠，\n安全区域全通过" },
+  { start: 42.3, end: 45.2, text: "从提示词到成品，2分钟搞定" },
+  { start: 45.4, end: 47.7, text: "关注我，教你用AI做视频!" },
+];
+
+const subtitleBar = document.getElementById('subtitle-bar');
+let _lastSubtitleText = null;
+function updateSubtitle(time) {
+  let active = null;
+  for (const sub of SUBTITLES) {
+    if (time >= sub.start && time < sub.end) { active = sub; break; }
+  }
+  if (active) {
+    if (active.text !== _lastSubtitleText) {
+      subtitleBar.textContent = active.text;
+      _lastSubtitleText = active.text;
+    }
+    if (subtitleBar.style.opacity !== '1') subtitleBar.style.opacity = '1';
+  } else {
+    if (subtitleBar.style.opacity !== '0') subtitleBar.style.opacity = '0';
+  }
+}
+
 // ===== 帧驱动动画系统 =====
 const FPS = 30;
 const SCENE_FADE_FRAMES = 8;
@@ -648,6 +713,7 @@ function easeOut(t) {
 }
 
 function renderFrame(frame) {
+  updateSubtitle(frame / FPS);
   let currentSceneInfo = null;
   for (const info of sceneFrames) {
     if (frame >= info.start && frame < info.end) {

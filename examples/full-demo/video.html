@@ -43,6 +43,32 @@ body {
   transform: translateY(30px);
 }
 
+/* ===== 字幕条 (内置,截图时直接捕获) ===== */
+.subtitle-bar {
+  position: absolute;
+  left: 60px; right: 60px;
+  bottom: 100px;
+  min-height: 80px;
+  padding: 18px 32px;
+  background: rgba(0, 0, 0, 0.72);
+  border-radius: 14px;
+  color: #ffffff;
+  font-size: 42px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: pre-line;
+  word-break: break-word;
+  box-sizing: border-box;
+  transition: opacity 0.12s linear;
+}
+
 /* ===== 场景1: 开场Hook ===== */
 #scene-1 {
   justify-content: flex-start;
@@ -484,6 +510,9 @@ body {
 <!-- 安全区域参考线 -->
 <div class="safe-zone"></div>
 
+<!-- 字幕条:截图时直接捕获,无需 ffmpeg 烧录 -->
+<div id="subtitle-bar" class="subtitle-bar"></div>
+
 <!-- 场景1: 开场Hook (0-4s) -->
 <div id="scene-1" class="scene" data-duration="4">
   <div class="anim code-ring" data-delay="0" data-dur="0.5">
@@ -732,6 +761,44 @@ body {
 </div>
 
 <script>
+// ===== 字幕数据 (秒,全局时间轴) =====
+// 与 voiceover_text.txt 文案对齐,直接写入 HTML,无需生成 SRT/ASS
+const SUBTITLES = [
+  { start: 0.3, end: 3.8, text: "用HTML就能做抖音视频？\n2分钟自动出片!" },
+  { start: 4.3, end: 7.0, text: "传统做法：学AE学PR，\n光装软件就半天" },
+  { start: 7.2, end: 9.7, text: "模板不合适还得从头改，\n一个60秒视频做三天" },
+  { start: 10.3, end: 13.5, text: "现在用HTML加CSS动画就能做" },
+  { start: 13.7, end: 16.7, text: "会写网页就能做视频，\n帧驱动动画系统，精确到每一帧" },
+  { start: 17.3, end: 20.5, text: "全程自动化：Playwright截图，\n5fps极速采集" },
+  { start: 20.7, end: 24.7, text: "Edge-TTS免费配音，\nFFmpeg一键合成带字幕视频" },
+  { start: 25.3, end: 28.5, text: "字幕精准对齐：\n语速算法自动计算时间轴" },
+  { start: 28.7, end: 31.7, text: "智能换行不拆英文单词，\n场景边界自动留白" },
+  { start: 32.3, end: 35.5, text: "内置深色主题规范：\n四级颜色对比度" },
+  { start: 35.7, end: 38.7, text: "抖音安全区域适配，\n视频压缩后依然清晰可读" },
+  { start: 39.3, end: 42.5, text: "一套HTML适配四大平台：\n抖音竖屏、视频号、B站、小红书" },
+  { start: 42.7, end: 45.7, text: "安全区域自动兼容，\n一次制作多端分发" },
+  { start: 46.3, end: 49.0, text: "HTML Video Creator，\n开源免费" },
+  { start: 49.2, end: 51.7, text: "关注我，\n教你从零开始做技术视频!" },
+];
+
+const subtitleBar = document.getElementById('subtitle-bar');
+let _lastSubtitleText = null;
+function updateSubtitle(time) {
+  let active = null;
+  for (const sub of SUBTITLES) {
+    if (time >= sub.start && time < sub.end) { active = sub; break; }
+  }
+  if (active) {
+    if (active.text !== _lastSubtitleText) {
+      subtitleBar.textContent = active.text;
+      _lastSubtitleText = active.text;
+    }
+    if (subtitleBar.style.opacity !== '1') subtitleBar.style.opacity = '1';
+  } else {
+    if (subtitleBar.style.opacity !== '0') subtitleBar.style.opacity = '0';
+  }
+}
+
 // ===== 帧驱动动画系统 =====
 const FPS = 30;
 const SCENE_FADE_FRAMES = 8;
@@ -755,6 +822,7 @@ function easeOut(t) {
 }
 
 function renderFrame(frame) {
+  updateSubtitle(frame / FPS);
   let currentSceneInfo = null;
   for (const info of sceneFrames) {
     if (frame >= info.start && frame < info.end) {
