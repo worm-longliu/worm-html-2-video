@@ -16,6 +16,10 @@ frames/
 # Generated per-scene voiceover timings
 scene_timings.json
 
+# Python cache
+__pycache__/
+*.pyc
+
 # OS files
 .DS_Store
 Thumbs.db
