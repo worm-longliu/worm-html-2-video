@@ -2,22 +2,25 @@
 """
 worm-html-2-video video generation script
 
-Generates voiceover via Edge-TTS, creates SRT subtitles with precise timing,
-and assembles the final MP4 video with hardcoded subtitles using FFmpeg.
+Generates voiceover via Edge-TTS, then composes the final MP4 video by
+merging the audio with the captured HTML frames. Subtitles live inside
+video.html (see SUBTITLES array) and are captured at render time, so no
+SRT/ASS burn-in is required.
 
 Usage:
     python generate_video.py [options]
 
 Options:
-    --voiceover <path>   Path to voiceover_text.txt (default: ./voiceover_text.txt)
-    --input-video <path> Path to input video from capture step (default: ./video_html.mp4)
-    --output <path>      Output video path (default: ./video_final.mp4)
-    --voice <name>       TTS voice name (default: zh-CN-YunxiNeural)
-    --rate <rate>        TTS speaking rate (default: +10%)
-    --frames-dir <path>   Frames directory for PNG→video fallback (default: ./frames)
-    --voiceover-only      Generate voiceover only (step 3), skip video compositing
-    --subtitles-only      Generate subtitles only (step 4), skip video compositing
-    --help, -h            Show this help message
+    --voiceover <path>          Path to voiceover_text.txt (default: ./voiceover_text.txt)
+    --input-video <path>        Path to input video from capture step (default: ./video_html.mp4)
+    --output <path>             Output video path (default: ./video_final.mp4)
+    --voice <name>              TTS voice name (default: zh-CN-YunxiNeural)
+    --rate <rate>               TTS speaking rate (default: +10%)
+    --frames-dir <path>         Frames directory for PNG→video fallback (default: ./frames)
+    --voiceover-only            Generate voiceover only (step 3), skip video compositing
+    --export-subtitles <path>   Convert voiceover_text.txt to a SUBTITLES JS snippet
+                                that can be pasted into video.html
+    --help, -h                  Show this help message
 """
 
 import subprocess
@@ -25,6 +28,7 @@ import os
 import asyncio
 import re
 import sys
+import json
 import edge_tts
 
 # Fix Windows GBK encoding issue with emoji
@@ -43,7 +47,8 @@ def parse_args():
         'rate': None,
         'frames_dir': None,
         'voiceover_only': False,
-        'subtitles_only': False,
+        'no_voiceover': False,
+        'export_subtitles': None,
     }
 
     i = 0
@@ -72,9 +77,12 @@ def parse_args():
         elif args[i] == '--voiceover-only':
             opts['voiceover_only'] = True
             i += 1
-        elif args[i] == '--subtitles-only':
-            opts['subtitles_only'] = True
+        elif args[i] == '--no-voiceover':
+            opts['no_voiceover'] = True
             i += 1
+        elif args[i] == '--export-subtitles':
+            opts['export_subtitles'] = args[i + 1]
+            i += 2
         else:
             print(f"Unknown option: {args[i]}")
             print("Use --help for usage information.")
@@ -151,112 +159,88 @@ async def generate_voiceover():
     await communicate.save(output_path)
 
     duration = get_audio_duration(output_path)
-    print(f"✅ Voiceover generated: voiceover.mp3 ({duration:.1f}s)")
+    print(f"✅ Voiceover: {output_path} ({duration:.1f}s)")
     return duration
 
 
-# ===== 2. Get audio duration =====
+# ===== 2. Audio duration helper =====
 def get_audio_duration(audio_path):
-    """Get audio duration in seconds using ffprobe."""
+    """Return audio duration in seconds using ffprobe."""
     result = subprocess.run(
-        ['ffprobe', '-v', 'quiet', '-show_entries',
-         'format=duration', '-of', 'csv=p=0', audio_path],
+        ['ffprobe', '-v', 'quiet', '-show_entries', 'format=duration',
+         '-of', 'csv=p=0', audio_path],
         capture_output=True, text=True
     )
-    return float(result.stdout.strip())
+    try:
+        return float(result.stdout.strip())
+    except ValueError:
+        return 0.0
 
 
-# ===== 3. Subtitle generation =====
-def format_subtitle_text(text, max_chars=20):
-    """Wrap subtitle text: max 20 chars per line, break at punctuation."""
-    if len(text) <= max_chars:
-        return text
+# ===== 3. Compute SUBTITLES (same algorithm as before, but emit to HTML/JS) =====
+def compute_subtitle_segments(segments):
+    """Split each scene's text into subtitle entries with timing in seconds.
 
-    punctuation = '，。！？、；：'
-    best_break = -1
-    for i in range(min(max_chars, len(text))):
-        if text[i] in punctuation:
-            best_break = i + 1
-
-    if 0 < best_break <= max_chars:
-        first = text[:best_break]
-        rest = text[best_break:]
-        if len(rest) <= max_chars:
-            return first + '\n' + rest
-        return first + '\n' + format_subtitle_text(rest, max_chars)
-
-    # Hard wrap at max_chars
-    lines = []
-    while len(text) > max_chars:
-        lines.append(text[:max_chars])
-        text = text[max_chars:]
-    if text:
-        lines.append(text)
-    return '\n'.join(lines)
-
-
-def format_srt_time(seconds):
-    """Convert seconds to SRT time format HH:MM:SS,mmm."""
-    h = int(seconds // 3600)
-    m = int((seconds % 3600) // 60)
-    s = int(seconds % 60)
-    ms = int((seconds % 1) * 1000)
-    return f'{h:02d}:{m:02d}:{s:02d},{ms:03d}'
-
-
-def generate_subtitles():
-    """Generate SRT subtitles with precise timing based on speech rate."""
-    segments = parse_voiceover_segments(VOICEOVER_FILE)
+    Returns a list of dicts: {start, end, text}.
+    """
     subtitles = []
-
     for seg in segments:
         scene_start = seg['start'] + SCENE_GAP
         scene_end = seg['end'] - SCENE_GAP
         available_time = scene_end - scene_start
+        if available_time <= 0:
+            continue
 
-        # Split by sentence-ending punctuation
+        # Split on sentence-ending punctuation
         sentences = re.split(r'[。！？]', seg['text'])
         sentences = [s.strip() for s in sentences if s.strip()]
-
         if not sentences:
             continue
 
-        # Allocate time proportionally by character count
         char_counts = [len(s) for s in sentences]
         total_chars = sum(char_counts)
-
         current_time = scene_start
+
         for i, sentence in enumerate(sentences):
             proportion = char_counts[i] / total_chars if total_chars > 0 else 1
-            duration = proportion * available_time
-            duration = max(MIN_DURATION, min(duration, MAX_DURATION))
-
+            duration = max(MIN_DURATION,
+                           min(proportion * available_time, MAX_DURATION))
             start = current_time
             end = min(current_time + duration, scene_end)
-
-            subtitles.append({
-                'start': start,
-                'end': end,
-                'text': sentence,
-            })
+            subtitles.append({'start': start, 'end': end, 'text': sentence})
             current_time = end + 0.2
-
-    # Write SRT file
-    srt_path = os.path.join(OUTPUT_DIR, 'subtitle.srt')
-    with open(srt_path, 'w', encoding='utf-8') as f:
-        for i, sub in enumerate(subtitles, 1):
-            formatted = format_subtitle_text(sub['text'])
-            f.write(f"{i}\n")
-            f.write(f"{format_srt_time(sub['start'])} --> {format_srt_time(sub['end'])}\n")
-            f.write(f"{formatted}\n\n")
-
-    print(f"✅ Subtitles generated: subtitle.srt ({len(subtitles)} entries)")
     return subtitles
 
 
-# ===== 4. FFmpeg video compositing =====
+def format_subtitle_js(subtitles):
+    """Render a SUBTITLES array literal (multi-line, max 20 chars/line)."""
+    lines = ['const SUBTITLES = [']
+    for sub in subtitles:
+        text_js = json.dumps(sub['text'], ensure_ascii=False)
+        lines.append(
+            f"  {{ start: {sub['start']:.2f}, end: {sub['end']:.2f}, text: {text_js} }},"
+        )
+    lines.append('];')
+    return '\n'.join(lines) + '\n'
+
+
+def export_subtitles_js(output_path):
+    """Convert voiceover_text.txt → SUBTITLES JS snippet for video.html."""
+    segments = parse_voiceover_segments(VOICEOVER_FILE)
+    subtitles = compute_subtitle_segments(segments)
+    js = format_subtitle_js(subtitles)
+
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(js)
+
+    print(f"✅ SUBTITLES exported: {output_path} ({len(subtitles)} entries)")
+    print(f"   Paste the array into video.html (replace the SUBTITLES constant).")
+    return subtitles
+
+
+# ===== 4. FFmpeg composition =====
 def create_video_from_frames():
-    """Create video from low-fps PNG sequence."""
+    """Compose PNG frames into video_html.mp4 (low-fps in, 30fps out)."""
     output = os.path.join(OUTPUT_DIR, 'video_html.mp4')
     input_pattern = os.path.join(FRAMES_DIR, '%06d.png')
 
@@ -266,21 +250,21 @@ def create_video_from_frames():
         '-i', input_pattern,
         '-vf', f'fps={OUTPUT_FPS},pad=ceil(iw/2)*2:ceil(ih/2)*2',
         '-c:v', 'libx264',
+        '-pix_fmt', 'yuv420p',
         '-preset', 'medium',
         '-crf', '20',
-        '-pix_fmt', 'yuv420p',
         '-movflags', '+faststart',
         output,
     ]
     subprocess.run(cmd, check=True, capture_output=True)
-    print(f"✅ Video composited: video_html.mp4")
+    print(f"✅ HTML frames composed: {output}")
     return output
 
 
 def merge_audio(video_file):
-    """Merge voiceover audio into video."""
+    """Merge voiceover.mp3 into the HTML video (no subtitle burn needed)."""
     audio_file = os.path.join(OUTPUT_DIR, 'voiceover.mp3')
-    output = os.path.join(OUTPUT_DIR, 'video_with_audio.mp4')
+    output = FINAL_OUTPUT
 
     cmd = [
         FFMPEG, '-y',
@@ -293,56 +277,13 @@ def merge_audio(video_file):
         output,
     ]
     subprocess.run(cmd, check=True, capture_output=True)
-    print(f"✅ Audio merged: video_with_audio.mp4")
+    print(f"✅ Audio merged: {output}")
     return output
 
 
-def burn_subtitles(video_file):
-    """Burn hardcoded subtitles (Windows-safe path approach)."""
-    srt_file = os.path.join(OUTPUT_DIR, 'subtitle.srt')
-    ass_file = os.path.join(OUTPUT_DIR, 'subtitle.ass')
-    final_output = FINAL_OUTPUT
-
-    # SRT → ASS conversion
-    subprocess.run([FFMPEG, '-y', '-i', srt_file, ass_file],
-                   check=True, capture_output=True)
-
-    # Switch to working directory for relative paths (Windows compatibility)
-    work_dir = OUTPUT_DIR
-    os.chdir(work_dir)
-
-    force_style = (
-        "FontSize=7,"
-        "FontName=Microsoft YaHei,"
-        "PrimaryColour=&H00FFFFFF,"
-        "OutlineColour=&H00000000,"
-        "BorderStyle=1,"
-        "Outline=1,"
-        "Shadow=0,"
-        "MarginV=30,"
-        "MarginL=100,"
-        "MarginR=100,"
-        "Alignment=2"
-    )
-
-    cmd = [
-        FFMPEG, '-y',
-        '-i', os.path.basename(video_file),
-        '-vf', f"subtitles='subtitle.ass':force_style='{force_style}'",
-        '-c:v', 'libx264',
-        '-preset', 'medium',
-        '-crf', '20',
-        '-c:a', 'copy',
-        os.path.basename(final_output),
-    ]
-    subprocess.run(cmd, check=True, capture_output=True)
-    print(f"✅ Subtitles burned: {os.path.basename(final_output)}")
-    return final_output
-
-
 def cleanup():
-    """Clean up intermediate files."""
-    intermediate = ['video_html.mp4', 'video_with_audio.mp4', 'subtitle.ass']
+    """Remove intermediate video files; keep frames/ for re-runs."""
+    intermediate = ['video_html.mp4']
     for f in intermediate:
         fp = os.path.join(OUTPUT_DIR, f)
         if os.path.exists(fp):
@@ -352,10 +293,18 @@ def cleanup():
 
 # ===== Main =====
 if __name__ == '__main__':
-    voiceover_only = cli_args['voiceover_only']
-    subtitles_only = cli_args['subtitles_only']
+    if cli_args['export_subtitles']:
+        out = cli_args['export_subtitles']
+        if not os.path.isabs(out):
+            out = os.path.join(OUTPUT_DIR, out)
+        print("📝 Export SUBTITLES (Step 2 helper)")
+        print("═══════════════════════════════════")
+        print(f"   Voiceover: {VOICEOVER_FILE}")
+        print(f"   Output:    {out}")
+        export_subtitles_js(out)
+        sys.exit(0)
 
-    if voiceover_only:
+    if cli_args['voiceover_only']:
         print("🎤 Voiceover-only mode (Step 3)")
         print("═══════════════════════════════")
         print(f"   Voiceover: {VOICEOVER_FILE}")
@@ -365,40 +314,30 @@ if __name__ == '__main__':
         print(f"   Use this duration to adjust scene data-duration in video.html")
         sys.exit(0)
 
-    if subtitles_only:
-        print("📝 Subtitles-only mode (Step 4)")
-        print("══════════════════════════════")
-        print(f"   Voiceover: {VOICEOVER_FILE}")
-        # Also generate voiceover if not already done (needed for timing)
-        if not os.path.exists(os.path.join(OUTPUT_DIR, 'voiceover.mp3')):
-            print("   ⚠️  voiceover.mp3 not found, generating first...")
-            audio_duration = asyncio.run(generate_voiceover())
-        else:
-            audio_duration = get_audio_duration(os.path.join(OUTPUT_DIR, 'voiceover.mp3'))
-            print(f"   Using existing voiceover.mp3 ({audio_duration:.1f}s)")
-
-        subtitles = generate_subtitles()
-        print(f"\n✅ Subtitles generated: subtitle.srt ({len(subtitles)} entries)")
-        print(f"   Voiceover duration: {audio_duration:.1f}s")
-        print(f"   Use subtitle timings to adjust scene data-duration in video.html")
-        sys.exit(0)
-
     print("🎬 worm-html-2-video — Generate")
     print("════════════════════════════════════")
     print(f"   Voiceover: {VOICEOVER_FILE}")
-    print(f"   Input: {INPUT_VIDEO}")
-    print(f"   Output: {FINAL_OUTPUT}")
-    print(f"   Frames: {FRAMES_DIR}")
+    print(f"   Input:     {INPUT_VIDEO}")
+    print(f"   Output:    {FINAL_OUTPUT}")
+    print(f"   Frames:    {FRAMES_DIR}")
     print(f"   TTS Voice: {TTS_VOICE} @ {TTS_RATE}")
-    print(f"   Capture: {CAPTURE_FPS}fps → Output: {OUTPUT_FPS}fps")
+    print(f"   Capture:   {CAPTURE_FPS}fps → Output: {OUTPUT_FPS}fps")
+    print(f"   Subtitles: embedded in video.html (no SRT/ASS burn)")
 
-    # 1. Generate voiceover
-    audio_duration = asyncio.run(generate_voiceover())
+    # 1. Voiceover: reuse existing voiceover.mp3 if present (new script-driven
+    #    workflow generates it via lib/voiceover.py); otherwise synthesize from
+    #    voiceover_text.txt (legacy workflow).
+    existing_mp3 = os.path.join(OUTPUT_DIR, 'voiceover.mp3')
+    if cli_args['no_voiceover'] or os.path.exists(existing_mp3):
+        if not os.path.exists(existing_mp3):
+            print(f'voiceover.mp3 not found: {existing_mp3}')
+            sys.exit(1)
+        audio_duration = get_audio_duration(existing_mp3)
+        print(f'Reusing existing voiceover.mp3 ({audio_duration:.1f}s)')
+    else:
+        audio_duration = asyncio.run(generate_voiceover())
 
-    # 2. Generate subtitles
-    generate_subtitles()
-
-    # 3. Check frames directory / input video
+    # 2. Compose HTML frames → video (if frames/ present), else reuse video_html.mp4
     if not os.path.exists(FRAMES_DIR) or not os.listdir(FRAMES_DIR):
         print("⚠️  frames directory is empty, checking for existing video...")
         if not os.path.exists(INPUT_VIDEO):
@@ -407,19 +346,15 @@ if __name__ == '__main__':
             sys.exit(1)
         html_video = INPUT_VIDEO
     else:
-        # PNG → Video
         html_video = create_video_from_frames()
 
-    # 4. Merge voiceover
-    video_audio = merge_audio(html_video)
+    # 3. Merge voiceover (subtitles already baked into the frames)
+    final = merge_audio(html_video)
 
-    # 5. Burn subtitles
-    final = burn_subtitles(video_audio)
-
-    # 6. Cleanup
+    # 4. Cleanup intermediate video
     cleanup()
 
-    # 7. Output info
+    # 5. Output info
     if os.path.exists(final):
         size = os.path.getsize(final) / 1024 / 1024
         print(f"\n🎉 Video generation complete!")

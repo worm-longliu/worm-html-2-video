@@ -31,15 +31,15 @@ worm-html-2-video/
 │   │   ├── voiceover_text.txt
 │   │   └── package.json
 │   ├── full-demo/                    # 完整演示（8场景52秒）
-│   │   ├── video.html
+│   │   ├── video.html                  # 字幕已内嵌在 SUBTITLES 数组
 │   │   ├── voiceover_text.txt
-│   │   ├── subtitle.srt
+│   │   ├── subtitle.srt                # 可选,旧 SRT 备份 (新流程不再需要)
 │   │   ├── script.md
 │   │   └── package.json
 │   └── skill-intro/                  # AI创作全过程（7场景48秒）
-│       ├── video.html
+│       ├── video.html                  # 字幕已内嵌在 SUBTITLES 数组
 │       ├── voiceover_text.txt
-│       ├── subtitle.srt
+│       ├── subtitle.srt                # 可选,旧 SRT 备份 (新流程不再需要)
 │       ├── script.md
 │       ├── thinking_process.md
 │       └── package.json
@@ -47,62 +47,57 @@ worm-html-2-video/
 └── LICENSE
 ```
 
-### 核心工作流（7步优化流程）
+### 核心工作流（脚本驱动，每步可人工审核）
+
+```json
+script.json  ← 唯一权威数据源（场景规划+字幕+配音文案，不含时间）
+```
+
+时长由配音反推，不再人工估算：voiceover.py 测出每场景真实配音时长，
+sync_html.py 据此回填 video.html 的 data-duration 与 SUBTITLES。
 
 ```
-1. 生成视频脚本 → script.md（确认每个场景内容）
-   ├── 分析主题，规划场景数量和总时长
-   ├── 编写分镜脚本（画面描述 + 配音文案 + 动画设计）
-   └── 输出 script.md + voiceover_text.txt（带时间标记）
+1. 编写脚本 → script.json（场景规划+字幕+配音文案，不含时间）  ★人工审核
+   ├── npx worm-html-2-video init  生成 script.json 模板
+   ├── 编辑 script.json：每场景 name/visual/animation/key_elements/voiceover/subtitle
+   └── 派生: npx worm-html-2-video script doc → script.md（分镜脚本，便于审核）
 
-2. 初次生成 HTML 页面 → video.html
-   ├── 基于 script.md 的场景设计编写 HTML
-   ├── 设置 data-duration 初始值（按语速估算）
-   └── 实现帧驱动动画系统和预览功能
+2. 生成 HTML 骨架 → video.html（字幕条+SUBTITLES占位+data-duration初值）  ★人工审核/调整
+   ├── npx worm-html-2-video script html
+   ├── 字幕条 DOM 已内置，SUBTITLES 数组按估算时长生成
+   └── 人工调整场景视觉与动画（帧驱动系统与预览已内置）
 
-3. 生成 AI 配音 → voiceover.mp3
-   ├── Edge-TTS 合成配音（zh-CN-YunxiNeural +10%）
-   ├── ffprobe 获取实际配音时长
-   └── 输出实际时长（用于下一步调整）
+3. 按场景生成配音 → voiceover.mp3 + scene_timings.json（每场景真实时长）
+   ├── npx worm-html-2-video voiceover
+   ├── 每场景单独 Edge-TTS 合成
+   ├── ffprobe 测量每段真实时长
+   └── ffmpeg concat 拼接为完整 voiceover.mp3
 
-4. 生成字幕 → subtitle.srt
-   ├── 精准算法：语速计算 + 场景边界对齐
-   ├── 智能换行（每行≤20字，标点处断行）
-   └── 输出字幕时间轴
+4. 据配音时长自动调整 video.html（data-duration + SUBTITLES 时间轴）
+   ├── npx worm-html-2-video sync
+   ├── 每场景 data-duration = 该场景配音真实时长（末场景 +tail-buffer）
+   └── SUBTITLES 时间轴按场景窗口重算
 
-5. 重新调整 HTML 场景切换时间 ⚠️ 关键步骤
-   ├── 根据实际配音时长和字幕时间轴
-   ├── 调整每个场景的 data-duration
-   ├── 确保：视频总时长 ≥ 配音时长 + 1s 余量
-   └── 场景边界与字幕时间对齐
+5. 截图 → video_html.mp4
+   ├── npx worm-html-2-video capture  （Playwright 逐帧截图 5fps，字幕随帧捕获）
+   └── 无需字幕烧录
 
 6. 合成视频 → video_final.mp4
-   ├── npx worm-html-2-video capture     # Playwright 逐帧截图（5fps）
-   ├── npx worm-html-2-video generate    # 自动化：
-   │   ├── FFmpeg PNG序列 → 视频（5fps→30fps 插帧）
-   │   ├── 合并配音（AAC 192kbps）
-   │   └── 烧录硬字幕（SRT→ASS）
+   ├── npx worm-html-2-video generate  （复用已有 voiceover.mp3 合并）
    └── 输出 video_final.mp4
-
-7. 人工复核 & 微调 🔍
-   ├── 观看 video_final.mp4，对照 script.md
-   ├── 根据场景说明判断片段时间是否合适
-   ├── 增/减 data-duration 进行微调
-   ├── 重新运行 capture + generate
-   └── 迭代直到满意
 ```
 
 ### 各步骤输入/输出
 
 | 步骤 | 输入 | 输出 | 工具 |
 |------|------|------|------|
-| 1. 脚本 | 视频主题/需求 | script.md, voiceover_text.txt | AI 生成 |
-| 2. HTML | script.md | video.html (初版) | 手写/AI |
-| 3. 配音 | voiceover_text.txt | voiceover.mp3 + 实际时长 | generate_video.py --voiceover-only |
-| 4. 字幕 | voiceover_text.txt | subtitle.srt | generate_video.py --subtitles-only |
-| 5. 调时 | 配音时长 + 字幕时间轴 | video.html (修订版) | 手动/AI |
-| 6. 合成 | video.html (修订版) | video_final.mp4 | capture + generate |
-| 7. 复核 | video_final.mp4 + script.md | video_final.mp4 (终版) | 人工 |
+| 1. 脚本 | 视频主题/需求 | script.json | npx ... init + 人工编辑 |
+| 1b. 派生 | script.json | script.md / voiceover_text.txt | npx ... script doc/vo |
+| 2. HTML | script.json | video.html (骨架，含 SUBTITLES 占位) | npx ... script html + 人工调整 |
+| 3. 配音 | script.json | voiceover.mp3 + scene_timings.json | npx ... voiceover |
+| 4. 调时 | scene_timings.json + script.json | video.html (时长已对齐) | npx ... sync |
+| 5. 截图 | video.html | frames/ + video_html.mp4 | npx ... capture |
+| 6. 合成 | video_html.mp4 + voiceover.mp3 | video_final.mp4 | npx ... generate |
 
 ---
 
@@ -304,21 +299,12 @@ const OUTPUT_FPS = 30;   // HTML原始帧率
 ### generate_video.py 关键步骤
 
 1. **Edge-TTS 配音** — `zh-CN-YunxiNeural`，语速 +10%
-2. **精准字幕生成** — 基于语速计算 + 场景边界对齐
+2. **字幕内嵌 HTML** — SUBTITLES 数组,截图时随帧捕获,无需 SRT/ASS 烧录
 3. **FFmpeg 合成** — 低帧率PNG → 插帧30fps视频
 4. **音频合并** — 视频 + 配音 → AAC 192kbps
-5. **字幕烧录** — SRT→ASS，force_style 控制样式
 
-### 字幕样式参数（Windows）
 
-```
-FontSize=7, FontName=Microsoft YaHei
-MarginV=30, MarginL=100, MarginR=100
-Alignment=2（底部居中）
-Outline=1, Shadow=0
-```
 
----
 
 ## 步骤 5：场景时间调整（关键步骤）
 
@@ -470,20 +456,53 @@ Agent 开发卡住不干活也不知道，半天的时间就浪费了。
 
 ---
 
-## 字幕生成规范
+## 字幕规范（内嵌 HTML）
 
-### 精准时间轴算法
+字幕写在 `video.html` 的 `SUBTITLES` 数组里,字幕条 DOM 已内置,截图时随帧捕获。
+**不再生成 SRT/ASS,不再用 ffmpeg 烧录。**
 
-```python
-CHARS_PER_SECOND = 4.5   # 中文语速
-SCENE_GAP = 0.3          # 场景首尾留白
-MIN_DURATION = 1.5       # 最短显示
-MAX_DURATION = 5.0       # 最长显示
+### SUBTITLES 数据格式
 
-# 按字符数比例分配场景时间，确保：
-# 1. 字幕不超出场景边界
-# 2. 字幕间隔 ≥ 0.2s
-# 3. 每条字幕 1.5-5.0s
+```javascript
+const SUBTITLES = [
+  { start: 0.3, end: 3.7, text: "第一句字幕" },
+  { start: 4.3, end: 8.5, text: "第二句字幕\n换行" },
+];
+```
+
+### 字幕条 DOM 与 CSS（已内置于 `npx init` 模板）
+
+```html
+<div id="subtitle-bar" class="subtitle-bar"></div>
+<style>
+  .subtitle-bar {
+    position: absolute;
+    left: 60px; right: 60px;
+    bottom: 100px;
+    min-height: 80px;
+    padding: 18px 32px;
+    background: rgba(0, 0, 0, 0.72);
+    border-radius: 14px;
+    color: #ffffff;
+    font-size: 42px; font-weight: 600;
+    line-height: 1.4; text-align: center;
+    z-index: 9999; opacity: 0;
+    white-space: pre-line; word-break: break-word;
+    box-sizing: border-box;
+    transition: opacity 0.12s linear;
+  }
+</style>
+```
+
+### 字幕时间轴算法 (与原 SRT 模式一致)
+
+```
+语速:        4.5 字/秒 (中文)
+场景留白:    首尾各 0.3s
+最短显示:    1.5s
+最长显示:    5.0s
+字幕间隔:    ≥ 0.2s
+换行:        文本内 \n,每行 ≤ 20 字符
 ```
 
 ### 字幕换行规则
@@ -493,12 +512,20 @@ MAX_DURATION = 5.0       # 最长显示
 - 最多 2 行，超过则拆分为多条
 - 英文单词不拆分
 
+### 自动从 voiceover_text.txt 导出
+
+```bash
+python lib/generate_video.py --export-subtitles subtitles.js
+# 把输出的 JS 数组粘贴到 video.html 的 SUBTITLES 位置
+```
+
 ### 验证检查
 
-- [ ] 所有字幕在配音时长范围内
+- [ ] 所有 SUBTITLES 时间在配音时长范围内
 - [ ] 无时间重叠
 - [ ] 每条显示 ≥ 1.5s
 - [ ] 场景切换时无字幕残留
+- [ ] 字幕文本与配音文案一致 (TTS 可能改写,需同步)
 
 ---
 
@@ -548,9 +575,8 @@ MAX_DURATION = 5.0       # 最长显示
 - [ ] capture.mjs：5fps 采集（不自动清理 frames/）
 - [ ] FFmpeg：`-framerate 5` 输入 + `-vf fps=30` 插帧
 - [ ] 配音：Edge-TTS `zh-CN-YunxiNeural` +10%
-- [ ] 字幕：精准算法生成，每行 20 字符换行
-- [ ] 烧录：SRT→ASS + 相对路径 + force_style
-- [ ] 音画同步：配音时长 ≤ 视频时长
+- [ ] 字幕：内嵌于 `video.html` 的 `SUBTITLES` 数组 (随帧捕获,无需烧录)
+- [ ] 音画同步：配音时长 ≤ 视频时长,SUBTITLES 时间不超出配音范围
 - [ ] 输出验证：分辨率/时长/音轨完整
 
 ### 配音文案
@@ -574,13 +600,13 @@ A: 每场景至少 4s，淡入淡出 8 帧（0.27s）。配音未说完不要切
 A: 三步修复：1) 先生成配音获取实际时长；2) 延长最后场景 duration；3) 确保视频总时长 ≥ 配音时长 + 1s。
 
 **Q: 字幕时间不准确？**
-A: 使用精准字幕算法（video-generation.md 第3节），基于语速计算。避免"每句固定2秒"的简单方案。
+A: 调整 `video.html` 中 `SUBTITLES` 数组的 `start` / `end` 即可。算法 (与原 SRT 一致) 在 video-generation.md 第 3 节有说明。避免"每句固定2秒"的简单方案。
 
 **Q: 渲染速度太慢？**
-A: 使用 5fps 低帧率采集模式，提速 5.3 倍。55 秒视频约 60 秒完成截图。
+A: 使用 5fps 低帧率采集模式,提速 5.3 倍。55 秒视频约 60 秒完成截图。
 
-**Q: FFmpeg 字幕路径报错？**
-A: Windows 下必须 `os.chdir(OUTPUT_DIR)` + 相对路径。禁止在 `original_size` 参数中传文件路径。
+**Q: FFmpeg 字幕路径报错 (旧方案)?**
+A: 新方案 (HTML 内嵌字幕) 已彻底消除此问题。截图时字幕随帧捕获,无需 ffmpeg 烧录。
 
 **Q: frames/ 目录为空导致合成失败？**
 A: capture.mjs 禁止自动清理 frames 目录。generate_video.py 需要复用这些帧文件。

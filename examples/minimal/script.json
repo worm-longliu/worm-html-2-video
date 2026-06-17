@@ -1,0 +1,33 @@
+{
+  "title": "最小示例 - 3场景15秒",
+  "target_platform": "douyin",
+  "scenes": [
+    {
+      "id": 1,
+      "name": "标题",
+      "visual": "深色背景,主标题大字居中,副标题渐入",
+      "animation": "标题淡入(0s) → 副标题淡入(0.5s)",
+      "key_elements": ["主标题", "副标题"],
+      "voiceover": "这是一个最小示例，只有三个场景。",
+      "subtitle": "最小示例\n3个场景"
+    },
+    {
+      "id": 2,
+      "name": "内容",
+      "visual": "绿色边框内容卡片,高亮关键词",
+      "animation": "卡片淡入(0s)",
+      "key_elements": ["内容卡片", "高亮"],
+      "voiceover": "只需三个文件，就能生成一个完整的抖音竖屏视频。",
+      "subtitle": "只需3个文件\n生成完整视频"
+    },
+    {
+      "id": 3,
+      "name": "结尾",
+      "visual": "CTA按钮,绿色高亮",
+      "animation": "标题淡入(0s) → 按钮弹出(0.5s)",
+      "key_elements": ["CTA按钮"],
+      "voiceover": "开始创作吧！2分钟出片！",
+      "subtitle": "开始创作\n2分钟出片"
+    }
+  ]
+}

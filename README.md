@@ -13,37 +13,39 @@
 - **多平台适配** — 抖音/视频号/B站/小红书，一次制作多端分发
 - **免费配音** — Edge-TTS 中文男声，自然流畅
 
-## 工作流程
+## 工作流程（脚本驱动，每步可人工审核）
 
 ```
-脚本确认 → HTML 初版 → AI 配音 → 字幕生成 → 时间调整 → 视频合成 → 人工复核
-  (Step 1)    (Step 2)    (Step 3)   (Step 4)    (Step 5)    (Step 6)    (Step 7)
+脚本(script.json) ★审核 → 生成HTML ★审核调整 → 按场景配音+记录时长 → 据时长调HTML → 截图 → 合成视频
+       (1)                (2)                (3)              (4)        (5)      (6)
 ```
 
-**优化后的 7 步流程：每一步都可独立执行，迭代微调不影响其他步骤。**
+核心变化：`script.json` 是唯一权威数据源（场景规划+字幕+配音文案，不含时间），
+时长由配音反推——`voiceover.py` 按场景合成并测量真实时长，`sync_html.py`
+据此自动更新 `video.html` 的 `data-duration` 与 `SUBTITLES` 时间轴。
 
 ### 快速开始
 
 ```bash
-# Step 1: 编写脚本（确认场景内容和配音文案）
-# 编辑 voiceover_text.txt（带 [场景N: Xs-Ys] 时间标记）
+# 1. 初始化项目（生成 script.json）
+npx worm-html-2-video init
+# 编辑 script.json：场景画面/动画/关键元素/配音文案/字幕文本  ★人工审核
 
-# Step 2: 编写 HTML 页面（帧驱动动画）
-# 编辑 video.html
+# 2. 由脚本生成 HTML 骨架（字幕条+SUBTITLES占位+data-duration初值）
+npx worm-html-2-video script html
+# 人工审核/调整 video.html 的场景视觉与动画  ★人工审核
 
-# Step 3: 生成 AI 配音
-python lib/generate_video.py --voiceover-only
+# 3. 按场景生成配音，记录每场景真实时长 → scene_timings.json
+npx worm-html-2-video voiceover
 
-# Step 4: 生成字幕
-python lib/generate_video.py --subtitles-only
+# 4. 据配音时长自动调整 video.html（data-duration + SUBTITLES 时间轴）
+npx worm-html-2-video sync
 
-# Step 5: 根据实际配音时长和字幕时间轴，调整 video.html 中 data-duration
+# 5. Playwright 逐帧截图 → video_html.mp4
+npx worm-html-2-video capture
 
-# Step 6: 合成视频
-node lib/capture.mjs              # 截图（约60秒）
-python lib/generate_video.py      # 配音+字幕+合成
-
-# Step 7: 观看 video_final.mp4，微调 data-duration，重复 Step 6
+# 6. 合成最终视频（复用已生成配音）→ video_final.mp4
+npx worm-html-2-video generate
 ```
 
 ### 环境要求
@@ -60,15 +62,18 @@ python lib/generate_video.py      # 配音+字幕+合成
 
 | 命令 | 说明 |
 |------|------|
-| `npx worm-html-2-video init` | 在当前目录创建示例项目 |
-| `npx worm-html-2-video capture` | Playwright 截图 → video_html.mp4 |
-| `npx worm-html-2-video generate` | Edge-TTS 配音 + 字幕 + FFmpeg → video_final.mp4 |
-| `python lib/generate_video.py --voiceover-only` | 仅生成配音（Step 3） |
-| `python lib/generate_video.py --subtitles-only` | 仅生成字幕（Step 4） |
+| `npx worm-html-2-video init` | 在当前目录创建 `script.json` |
+| `npx worm-html-2-video script <sub>` | 脚本工具：`validate` / `vo` / `doc` / `html` |
+| `npx worm-html-2-video voiceover` | 按场景配音 → `voiceover.mp3` + `scene_timings.json` |
+| `npx worm-html-2-video sync` | 据配音时长调整 `video.html`（data-duration + SUBTITLES） |
+| `npx worm-html-2-video capture` | Playwright 截图 → `video_html.mp4` |
+| `npx worm-html-2-video generate` | 合成配音 → `video_final.mp4`（复用已有 voiceover.mp3） |
 
+**script 子命令：** `validate`（校验）`vo`（派生 voiceover_text.txt）`doc`（派生 script.md）`html`（生成 video.html 骨架）
+**voiceover 选项：** `--script <p>` `--output <p>` `--timings <p>` `--voice <name>` `--rate <rate>` `--scene-gap <s>`
+**sync 选项：** `--html <p>` `--timings <p>` `--script <p>` `--output <p>` `--tail-buffer <s>`
 **capture 选项：** `--html <path>` `--output <path>` `--fps <number>`
-
-**generate 选项：** `--voiceover <path>` `--input-video <path>` `--output <path>` `--voice <name>` `--rate <rate>` `--voiceover-only` `--subtitles-only`
+**generate 选项：** `--voiceover <path>` `--input-video <path>` `--output <path>` `--voice <name>` `--rate <rate>` `--no-voiceover`（复用已有 mp3）
 
 ## 项目结构
 
@@ -80,8 +85,14 @@ worm-html-2-video/
 ├── bin/
 │   └── cli.js                    # CLI 入口（npx worm-html-2-video）
 ├── lib/                          # 核心工具脚本
+│   ├── script_tool.py           # 脚本校验/派生(voiceover_text.txt,script.md)/生成HTML骨架
+│   ├── voiceover.py             # 按场景配音+测量时长 → voiceover.mp3 + scene_timings.json
+│   ├── sync_html.py             # 据配音时长调整 video.html(data-duration + SUBTITLES)
+│   ├── script_tool.py           # 脚本校验/派生vo与doc/生成HTML骨架
+│   ├── voiceover.py             # 按场景Edge-TTS配音+记录时长→scene_timings.json
+│   ├── sync_html.py             # 据配音时长更新video.html的data-duration与SUBTITLES
 │   ├── capture.mjs               # Playwright 截图（通用版）
-│   └── generate_video.py         # Edge-TTS + FFmpeg 合成（通用版）
+│   └── generate_video.py         # 合成配音→video_final.mp4（复用已有voiceover.mp3）
 ├── docs/                         # 技术文档
 │   ├── css-standards.md          # CSS 深色主题完整规范
 │   ├── video-copywriting.md      # 文案与字幕规范
@@ -92,26 +103,25 @@ worm-html-2-video/
 │   ├── video-copywriting.md
 │   └── video-generation.md
 ├── examples/                     # 示例（仅 Git，不包含在 npm 包中）
-│   ├── minimal/                  # 最小可运行示例（3场景15秒）
-│   │   ├── video.html
-│   │   ├── capture.mjs
-│   │   ├── generate_video.py
-│   │   ├── voiceover_text.txt
-│   │   └── package.json
+│   ├── minimal/                  # 最小可运行示例（脚本驱动）
+│   │   ├── script.json               # 唯一权威数据源（场景+字幕+配音文案）
+│   │   ├── video.html                # 由 script_tool html 生成，sync 调整时长
+│   │   ├── voiceover_text.txt        # 由 script.json 派生（人工可读）
+│   │   └── package.json              # scripts 指向 ../../lib/ 通用工具
 │   ├── full-demo/                # 完整演示（8场景52秒）
-│   │   ├── video.html
+│   │   ├── video.html                # 字幕已内嵌在 SUBTITLES 数组
 │   │   ├── capture.mjs
 │   │   ├── generate_video.py
 │   │   ├── voiceover_text.txt
-│   │   ├── subtitle.srt
+│   │   ├── subtitle.srt              # 可选,旧 SRT 备份 (新流程不再需要)
 │   │   ├── script.md
 │   │   └── package.json
 │   └── skill-intro/              # AI创作全过程（7场景48秒，含思考记录）
-│       ├── video.html
+│       ├── video.html                # 字幕已内嵌在 SUBTITLES 数组
 │       ├── capture.mjs
 │       ├── generate_video.py
 │       ├── voiceover_text.txt
-│       ├── subtitle.srt
+│       ├── subtitle.srt              # 可选,旧 SRT 备份 (新流程不再需要)
 │       ├── script.md
 │       ├── thinking_process.md
 │       └── package.json
@@ -144,13 +154,23 @@ Playwright 逐帧调用 `gotoFrame()` 截图，实现精确的动画捕获。
 提速效果: 5.3倍（相比30fps全帧采集）
 ```
 
-### 精准字幕时间轴
+### 字幕内嵌于 HTML
 
-```python
-时长 = 中文字数 ÷ 4.5 + 英文词数 × 0.5
-场景留白 = 首尾各 0.3s
-字幕间隔 ≥ 0.2s
+```html
+<div id="subtitle-bar" class="subtitle-bar"></div>
+<script>
+  const SUBTITLES = [
+    { start: 0.3, end: 3.7, text: "字幕文本\n换行" },
+    ...
+  ];
+  // 渲染循环中按当前时间更新 #subtitle-bar 文本
+</script>
 ```
+
+- 字幕条在 HTML 中预留位置，截图时随帧一起捕获
+- 无需 SRT/ASS 生成和 ffmpeg 烧录
+- 算法与 SRT 模式一致：每字 0.22s，场景首尾各留 0.3s
+- 自动导出：`python lib/generate_video.py --export-subtitles subtitles.js`
 
 ### 安全区域（抖音）
 
@@ -183,7 +203,7 @@ Playwright 逐帧调用 `gotoFrame()` 截图，实现精确的动画捕获。
 - `thinking_process.md` — AI 的完整决策链路（需求分析→时长规划→文案创作→视觉设计→动画编排→代码生成→质量验证）
 - `script.md` — 分镜脚本（7场景48秒）
 - `voiceover_text.txt` — 带时间标记的配音文案
-- `subtitle.srt` — 精准时间轴字幕（13条）
+- `subtitle.srt` — 旧 SRT 文件,新流程不再生成 (字幕已内嵌在 video.html)
 - 完整可运行的 HTML + 截图 + 合成脚本
 
 ## 适用场景
@@ -198,8 +218,8 @@ Playwright 逐帧调用 `gotoFrame()` 截图，实现精确的动画捕获。
 - **前端渲染**：HTML5 + CSS3 + JavaScript（帧驱动动画）
 - **截图引擎**：Playwright（Chromium headless）
 - **语音合成**：Edge-TTS（微软免费 TTS）
-- **视频处理**：FFmpeg（H.264 编码 + 字幕烧录）
-- **字幕格式**：SRT → ASS（force_style 样式控制）
+- **视频处理**：FFmpeg（H.264 编码 + 配音合并）
+- **字幕方案**：HTML 内嵌 SUBTITLES 数组（截图时直接捕获，无 ffmpeg 烧录）
 
 ## 常见问题
 
@@ -207,7 +227,7 @@ Playwright 逐帧调用 `gotoFrame()` 截图，实现精确的动画捕获。
 A: 帧驱动可以精确控制每一帧的画面，适合截图方式捕获。CSS 动画在截图时可能处于中间状态。
 
 **Q: 支持 macOS/Linux 吗？**
-A: 支持。FFmpeg 和 Playwright 跨平台。Windows 用户注意字幕烧录路径问题（参见 video-generation.md）。
+A: 支持。FFmpeg 和 Playwright 跨平台。新方案 (HTML 内嵌字幕) 已消除 Windows 字幕烧录路径问题。
 
 **Q: 如何自定义配音声音？**
 A: 修改 `generate_video.py` 中的 `TTS_VOICE` 变量。推荐：

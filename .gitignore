@@ -13,6 +13,9 @@ frames/
 # Generated subtitles (keep .srt as reference)
 *.ass
 
+# Generated per-scene voiceover timings
+scene_timings.json
+
 # OS files
 .DS_Store
 Thumbs.db

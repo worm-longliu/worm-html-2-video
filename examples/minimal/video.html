@@ -3,125 +3,136 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1080, height=1920">
-<title>Minimal Example - 3场景15秒</title>
+<title>最小示例 - 3场景15秒</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  width: 1080px; height: 1920px;
-  overflow: hidden;
+  width: 1080px; height: 1920px; overflow: hidden;
   font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
-  background: #0f0c29;
-  -webkit-font-smoothing: antialiased;
+  background: #0f0c29; -webkit-font-smoothing: antialiased;
 }
 .scene {
   position: absolute; top: 0; left: 0;
-  width: 1080px; height: 1920px;
-  opacity: 0;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
+  width: 1080px; height: 1920px; opacity: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
 .anim { opacity: 0; transform: translateY(30px); }
-
-/* 场景1 */
-#scene-1 { background: linear-gradient(135deg, #0f0c29, #302b63); }
-.title { font-size: 72px; color: #ffffff; font-weight: bold; text-align: center; line-height: 1.5; }
-.subtitle { font-size: 36px; color: #e6e6e6; margin-top: 40px; }
-
-/* 场景2 */
-#scene-2 { background: linear-gradient(180deg, #1a1a2e, #16213e); }
-.content-box {
-  width: 800px; padding: 50px;
-  background: rgba(0,255,136,0.06);
-  border: 2px solid rgba(0,255,136,0.3);
-  border-radius: 20px; text-align: center;
-}
-.content-text { font-size: 40px; color: #e6e6e6; line-height: 2; }
+.scene-title { font-size: 72px; color: #ffffff; font-weight: bold; text-align: center; line-height: 1.5; }
+.scene-sub { font-size: 36px; color: #e6e6e6; margin-top: 40px; text-align: center; }
 .highlight { color: #00ff88; font-weight: bold; }
-
-/* 场景3 */
-#scene-3 { background: linear-gradient(135deg, #0f0c29, #24243e); }
-.cta-btn {
-  padding: 25px 60px; background: #00ff88;
-  border-radius: 40px; font-size: 36px;
-  color: #0f0c29; font-weight: bold; margin-top: 40px;
+.subtitle-bar {
+  position: absolute; left: 60px; right: 60px; bottom: 100px;
+  min-height: 80px; padding: 18px 32px;
+  background: rgba(0,0,0,0.72); border-radius: 14px;
+  color: #ffffff; font-size: 42px; font-weight: 600; line-height: 1.4;
+  text-align: center; z-index: 9999; opacity: 0; pointer-events: none;
+  display: flex; align-items: center; justify-content: center;
+  white-space: pre-line; word-break: break-word; box-sizing: border-box;
+  transition: opacity 0.12s linear;
 }
 </style>
 </head>
 <body>
-
-<!-- 场景1: 标题 (0-5s) -->
-<div id="scene-1" class="scene" data-duration="5">
-  <div class="anim title" data-delay="0" data-dur="0.6">最小示例<br>3个场景 15秒</div>
-  <div class="anim subtitle" data-delay="0.5" data-dur="0.6">HTML Video Creator</div>
+<div id="subtitle-bar" class="subtitle-bar"></div>
+<div id="scene-1" class="scene" data-duration="3.4">
+  <div class="anim scene-title" data-delay="0" data-dur="0.6">标题</div>
+  <div class="anim scene-sub" data-delay="0.4" data-dur="0.6">最小示例</div>
 </div>
-
-<!-- 场景2: 内容 (5-10s) -->
-<div id="scene-2" class="scene" data-duration="5">
-  <div class="anim content-box" data-delay="0" data-dur="0.6">
-    <div class="content-text">
-      只需 <span class="highlight">3 个文件</span><br>
-      就能生成一个完整视频
-    </div>
-  </div>
+<div id="scene-2" class="scene" data-duration="4.6">
+  <div class="anim scene-title" data-delay="0" data-dur="0.6">内容</div>
+  <div class="anim scene-sub" data-delay="0.4" data-dur="0.6">只需3个文件</div>
 </div>
-
-<!-- 场景3: 结尾 (10-15s) -->
-<div id="scene-3" class="scene" data-duration="5">
-  <div class="anim title" data-delay="0" data-dur="0.6">开始创作吧！</div>
-  <div class="anim cta-btn" data-delay="0.5" data-dur="0.6">⚡ 2分钟出片</div>
+<div id="scene-3" class="scene" data-duration="3.9">
+  <div class="anim scene-title" data-delay="0" data-dur="0.6">结尾</div>
+  <div class="anim scene-sub" data-delay="0.4" data-dur="0.6">开始创作</div>
 </div>
-
 <script>
 const FPS = 30;
 const SCENE_FADE_FRAMES = 8;
+const SUBTITLES = [
+  {
+    "start": 0.3,
+    "end": 1.68,
+    "text": "最小示例"
+  },
+  {
+    "start": 1.68,
+    "end": 3.06,
+    "text": "3个场景"
+  },
+  {
+    "start": 3.66,
+    "end": 5.66,
+    "text": "只需3个文件"
+  },
+  {
+    "start": 5.66,
+    "end": 7.67,
+    "text": "生成完整视频"
+  },
+  {
+    "start": 8.27,
+    "end": 9.9,
+    "text": "开始创作"
+  },
+  {
+    "start": 9.9,
+    "end": 11.53,
+    "text": "2分钟出片"
+  }
+];
+const subtitleBar = document.getElementById('subtitle-bar');
+let _lastSub = null;
+function updateSubtitle(time) {
+  let active = null;
+  for (const sub of SUBTITLES) { if (time >= sub.start && time < sub.end) { active = sub; break; } }
+  if (active) {
+    if (active.text !== _lastSub) { subtitleBar.textContent = active.text; _lastSub = active.text; }
+    if (subtitleBar.style.opacity !== '1') subtitleBar.style.opacity = '1';
+  } else { if (subtitleBar.style.opacity !== '0') subtitleBar.style.opacity = '0'; }
+}
 const scenes = Array.from(document.querySelectorAll('.scene'));
 const totalFrames = scenes.reduce((s, el) => s + Math.round(parseFloat(el.dataset.duration) * FPS), 0);
-
-const sceneFrames = [];
-let offset = 0;
-scenes.forEach((scene, i) => {
-  const dur = parseFloat(scene.dataset.duration);
-  const frames = Math.round(dur * FPS);
-  sceneFrames.push({ start: offset, end: offset + frames, scene, index: i });
-  offset += frames;
+const sceneFrames = []; let _off = 0;
+scenes.forEach((sc, i) => {
+  const d = parseFloat(sc.dataset.duration); const f = Math.round(d * FPS);
+  sceneFrames.push({ start: _off, end: _off + f, index: i }); _off += f;
 });
-
 function easeOut(t) { return 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3); }
-
 function renderFrame(frame) {
+  updateSubtitle(frame / FPS);
   let info = null;
   for (const sf of sceneFrames) { if (frame >= sf.start && frame < sf.end) { info = sf; break; } }
   if (!info) return;
-
   const localFrame = frame - info.start;
   const total = info.end - info.start;
-  let opacity = 1;
-  if (localFrame < SCENE_FADE_FRAMES) opacity = easeOut(localFrame / SCENE_FADE_FRAMES);
-  else if (localFrame > total - SCENE_FADE_FRAMES) opacity = easeOut((total - localFrame) / SCENE_FADE_FRAMES);
-
-  scenes.forEach((s, i) => {
-    s.style.opacity = i === info.index ? opacity : '0';
-    s.style.zIndex = i === info.index ? '100' : '0';
-  });
-
-  info.scene.querySelectorAll('.anim').forEach(anim => {
-    const delay = Math.round(parseFloat(anim.dataset.delay) * FPS);
-    const dur = Math.round(parseFloat(anim.dataset.dur) * FPS);
-    if (localFrame < delay) { anim.style.opacity = '0'; anim.style.transform = 'translateY(30px)'; }
-    else if (localFrame < delay + dur) {
-      const t = easeOut((localFrame - delay) / dur);
-      anim.style.opacity = t; anim.style.transform = `translateY(${30*(1-t)}px)`;
-    } else { anim.style.opacity = '1'; anim.style.transform = 'translateY(0)'; }
+  let op = 1;
+  if (localFrame < SCENE_FADE_FRAMES) op = easeOut(localFrame / SCENE_FADE_FRAMES);
+  else if (localFrame > total - SCENE_FADE_FRAMES) op = easeOut((total - localFrame) / SCENE_FADE_FRAMES);
+  scenes.forEach((s, i) => { if (i === info.index) { s.style.opacity = op; s.style.zIndex = '100'; } else { s.style.opacity = '0'; s.style.zIndex = '0'; } });
+  info && scenes[info.index].querySelectorAll('.anim').forEach(an => {
+    const dly = Math.round(parseFloat(an.dataset.delay) * FPS);
+    const du = Math.round(parseFloat(an.dataset.dur) * FPS);
+    if (localFrame < dly) { an.style.opacity = '0'; an.style.transform = 'translateY(30px)'; }
+    else if (localFrame < dly + du) { const p = (localFrame - dly) / du; const e = easeOut(p); an.style.opacity = e; an.style.transform = `translateY(${30*(1-e)}px)`; }
+    else { an.style.opacity = '1'; an.style.transform = 'translateY(0)'; }
   });
 }
-
 window.__hyperframes = {
   getTotalFrames: () => totalFrames,
   getSceneCount: () => scenes.length,
   getSceneDuration: (i) => parseFloat(scenes[i].dataset.duration),
-  gotoFrame: (f) => renderFrame(Math.max(0, Math.min(f, totalFrames - 1))),
+  gotoFrame: (frame) => renderFrame(Math.max(0, Math.min(frame, totalFrames - 1)))
 };
-
+let _f = 0; let _playing = false; let _iv = null;
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') { e.preventDefault(); if (_playing) { clearInterval(_iv); _playing = false; } else { _playing = true; _iv = setInterval(() => { _f = (_f + 1) % totalFrames; renderFrame(_f); }, 1000 / FPS); } }
+  else if (e.code === 'ArrowRight') { _f = Math.min(_f + 1, totalFrames - 1); renderFrame(_f); }
+  else if (e.code === 'ArrowLeft') { _f = Math.max(_f - 1, 0); renderFrame(_f); }
+  else if (e.code === 'Home') { _f = 0; renderFrame(_f); }
+  else if (e.code === 'End') { _f = totalFrames - 1; renderFrame(_f); }
+  else if (e.key >= '1' && e.key <= '9') { const idx = parseInt(e.key) - 1; if (idx < sceneFrames.length) { _f = sceneFrames[idx].start; renderFrame(_f); } }
+});
 renderFrame(0);
 </script>
 </body>

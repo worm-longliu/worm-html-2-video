@@ -1,38 +1,53 @@
 # 视频生成流程
 
-## 优化工作流（7步）
+## 脚本驱动工作流（每步可人工审核）
 
-```
-1. 生成视频脚本 → script.md（确认每个场景内容）
-2. 初次生成 HTML 页面 → video.html
-3. 生成 AI 配音 → voiceover.mp3
-   python lib/generate_video.py --voiceover-only
-4. 生成字幕 → subtitle.srt
-   python lib/generate_video.py --subtitles-only
-5. 重新调整 HTML 场景切换时间（按配音/字幕）
+`
+1. 编写脚本 → script.json（场景规划+字幕+配音文案，不含时间）        ★人工审核
+   npx worm-html-2-video init  然后 编辑 script.json
+   可派生: npx worm-html-2-video script doc  → script.md（分镜脚本，便于审核）
+
+2. 生成 HTML 骨架 → video.html（字幕条+SUBTITLES占位+data-duration初值）  ★人工审核/调整
+   npx worm-html-2-video script html
+   人工调整场景视觉与动画
+
+3. 按场景生成配音 → voiceover.mp3 + scene_timings.json（每场景真实时长）
+   npx worm-html-2-video voiceover
+   （每场景单独 Edge-TTS，ffprobe 测真实时长，ffmpeg concat 拼接）
+
+4. 据配音时长自动调整 video.html（data-duration + SUBTITLES 时间轴）
+   npx worm-html-2-video sync
+   （读取 scene_timings.json，把每个场景显示时长设为该场景配音时长）
+
+5. 截图 → video_html.mp4
+   npx worm-html-2-video capture  （Playwright 逐帧截图，字幕随帧捕获）
+
 6. 合成视频 → video_final.mp4
-   node lib/capture.mjs + python lib/generate_video.py
-7. 人工复核 & 微调
-```
+   npx worm-html-2-video generate  （复用已有 voiceover.mp3 合并）
+`
+
+核心：时长不再人工估算。script.json 不含时间，voiceover.py 测出每场景
+真实配音时长，sync_html.py 据此回填 video.html，保证音画精确对齐。
 
 ---
 
 ## 完整工具链
 
-```
-video.html 
-    ↓ (Playwright 逐帧截图)
-capture.mjs 
-    ↓ (输出 PNG 序列)
-frames/000001.png ~ 000310.png
-    ↓ (Edge-TTS 配音)
-generate_video.py 
-    ↓ (FFmpeg 合成 + 字幕)
+`
+script.json（场景+字幕+配音文案）
+    ↓ script_tool.py html
+video.html（字幕条+SUBTITLES占位+data-duration初值）
+    ↓ voiceover.py（按场景Edge-TTS + ffprobe测时长）
+voiceover.mp3 + scene_timings.json
+    ↓ sync_html.py（据时长更新 data-duration 与 SUBTITLES）
+video.html（时长已对齐配音）
+    ↓ capture.mjs（Playwright 逐帧截图，字幕随帧捕获）
+frames/ + video_html.mp4
+    ↓ generate_video.py（复用 voiceover.mp3 合并，无字幕烧录）
 video_final.mp4
-```
+`
 
 ---
-
 ## 1. Playwright 截图（capture.mjs）
 
 ### 安装依赖
@@ -199,188 +214,186 @@ print(f"配音时长: {duration:.2f}s")
 
 ---
 
-## 3. 字幕生成（核心精准算法）
+## 3. 字幕生成（内嵌于 HTML，无 SRT/ASS）
 
-### SRT 格式规范
+字幕不再单独生成 SRT/ASS 文件,而是直接写入 `video.html` 的 `SUBTITLES` 数组。
+HTML 中预留字幕条 DOM,渲染循环按当前时间切换文本,截图时随帧捕获。
 
-```srt
-1
-00:00:00,500 --> 00:00:03,800
-为了不看 AI 写代码
-我写了三个方案
+### 3.1 HTML 字幕条结构
 
-2
-00:00:04,200 --> 00:00:07,100
-AI 在写代码，你在疯狂切屏
+```html
+<!-- DOM: 字幕条固定在底部 (避开抖音操作栏) -->
+<div id="subtitle-bar" class="subtitle-bar"></div>
+
+<style>
+  .subtitle-bar {
+    position: absolute;
+    left: 60px; right: 60px;
+    bottom: 100px;             /* 抖音操作栏上方 */
+    min-height: 80px;
+    padding: 18px 32px;
+    background: rgba(0, 0, 0, 0.72);
+    border-radius: 14px;
+    color: #ffffff;
+    font-size: 42px;            /* 视频压缩后仍清晰 */
+    font-weight: 600;
+    line-height: 1.4;
+    text-align: center;
+    z-index: 9999;              /* 浮在所有场景之上 */
+    opacity: 0;                 /* 默认隐藏,无字幕时不可见 */
+    pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+    white-space: pre-line;      /* 支持 \n 换行 */
+    word-break: break-word;
+    box-sizing: border-box;
+    transition: opacity 0.12s linear;
+  }
+</style>
+
+<script>
+  // ===== 字幕数据 (秒, 全局时间轴) =====
+  const SUBTITLES = [
+    { start: 0.3, end: 3.7, text: "第一句字幕" },
+    { start: 4.3, end: 8.5, text: "第二句字幕\n可以换行" },
+    { start: 9.0, end: 12.0, text: "第三句" },
+  ];
+
+  const subtitleBar = document.getElementById("subtitle-bar");
+  let _lastSubtitleText = null;
+  function updateSubtitle(time) {
+    let active = null;
+    for (const sub of SUBTITLES) {
+      if (time >= sub.start && time < sub.end) { active = sub; break; }
+    }
+    if (active) {
+      if (active.text !== _lastSubtitleText) {
+        subtitleBar.textContent = active.text;
+        _lastSubtitleText = active.text;
+      }
+      if (subtitleBar.style.opacity !== "1") subtitleBar.style.opacity = "1";
+    } else {
+      if (subtitleBar.style.opacity !== "0") subtitleBar.style.opacity = "0";
+    }
+  }
+</script>
 ```
 
-### 精准字幕生成算法
+### 3.2 在 renderFrame 中调用
 
-> **关键改进**：基于语速计算 + 场景边界对齐，替代简单的"每句2秒"假设。
+```javascript
+function renderFrame(frame) {
+  updateSubtitle(frame / FPS);  // <-- 在场景渲染前调用
+  // ... 原有场景/元素动画逻辑
+}
+```
+
+### 3.3 时间轴算法 (与原 SRT 模式一致)
+
+```
+场景留白:  首尾各 0.3s
+语速:      每秒 4.5 个中文字
+最短显示:  1.5s
+最长显示:  5.0s
+字幕间隔:  ≥ 0.2s
+换行:      文本内使用 \n,每行 ≤ 20 字符
+```
+
+### 3.4 自动从 voiceover_text.txt 导出 SUBTITLES
+
+```bash
+python lib/generate_video.py --export-subtitles subtitles.js
+# 输出的 JS 片段直接复制到 video.html 的 SUBTITLES 数组位置
+```
+
+底层逻辑 (Python):
 
 ```python
 import re
+import json
 
-# ===== 配音文案解析 =====
-def parse_voiceover_segments(voiceover_file):
-    """解析带时间戳的配音文案，返回结构化片段"""
-    with open(voiceover_file, 'r', encoding='utf-8') as f:
+CHARS_PER_SECOND = 4.5
+SCENE_GAP = 0.3
+MIN_DURATION = 1.5
+MAX_DURATION = 5.0
+
+def parse_voiceover_segments(path):
+    """解析 [场景N: Xs-Ys] 标记,返回 [{scene, start, end, text}]"""
+    with open(path, "r", encoding="utf-8") as f:
         content = f.read()
-    
-    segments = []
-    # 匹配格式: [场景N: Xs-Ys] 或 [场景N: X-Ys]
-    pattern = r'\[场景(\d+):\s*(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)s?\]'
+    pattern = r"\[(?:场景|Scene)\s*(\d+):\s*(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)s?\]"
     parts = re.split(pattern, content)
-    
+    out = []
     i = 1
     while i < len(parts):
-        scene_num = int(parts[i])
-        start_time = float(parts[i+1])
-        end_time = float(parts[i+2])
-        text_block = parts[i+3].strip()
-        
-        # 分割为独立句子
-        sentences = [s.strip() for s in text_block.split('\n') if s.strip()]
-        segments.append({
-            'scene': scene_num,
-            'start': start_time,
-            'end': end_time,
-            'sentences': sentences
+        out.append({
+            "scene": int(parts[i]),
+            "start": float(parts[i+1]),
+            "end": float(parts[i+2]),
+            "text": parts[i+3].strip() if i+3 < len(parts) else "",
         })
         i += 4
-    
-    return segments
+    return out
 
-# ===== 字幕时间轴计算 =====
-CHARS_PER_SECOND = 4.5   # 中文语速：每秒4-5字
-SCENE_GAP = 0.3          # 场景切换间隔（秒）
-MIN_DURATION = 1.5       # 字幕最短显示时长
-MAX_DURATION = 5.0       # 字幕最长显示时长
-
-def calculate_subtitle_timing(segments):
-    """基于语速和场景边界精准计算字幕时间轴"""
+def compute_subtitle_segments(segments):
+    """按语速+场景边界计算每条字幕的 {start, end, text}"""
     subtitles = []
-    
     for seg in segments:
-        scene_start = seg['start'] + SCENE_GAP  # 场景开始后留白
-        scene_end = seg['end'] - SCENE_GAP      # 场景结束前留白
-        available_time = scene_end - scene_start
-        
-        sentences = seg['sentences']
+        s = seg["start"] + SCENE_GAP
+        e = seg["end"] - SCENE_GAP
+        if e <= s:
+            continue
+        sentences = [x.strip() for x in re.split(r"[。！？]", seg["text"]) if x.strip()]
         if not sentences:
             continue
-        
-        # 按字符数比例分配时长
-        char_counts = [len(s) for s in sentences]
-        total_chars = sum(char_counts)
-        
-        current_time = scene_start
-        for i, sentence in enumerate(sentences):
-            # 基于语速计算理想时长
-            ideal_duration = len(sentence) / CHARS_PER_SECOND
-            # 按比例分配可用时间
-            proportional_duration = (char_counts[i] / total_chars) * available_time
-            # 取两者较小值，确保不超出场景边界
-            duration = min(
-                max(min(ideal_duration, proportional_duration), MIN_DURATION),
-                MAX_DURATION
-            )
-            
-            start = current_time
-            end = min(current_time + duration, scene_end)
-            
-            subtitles.append({
-                'start': start,
-                'end': end,
-                'text': sentence
-            })
-            
-            current_time = end + 0.2  # 字幕间微小间隔
-    
+        char_counts = [len(x) for x in sentences]
+        total = sum(char_counts)
+        cur = s
+        for i, sent in enumerate(sentences):
+            prop = char_counts[i] / total if total else 1
+            dur = max(MIN_DURATION, min(prop * (e - s), MAX_DURATION))
+            start = cur
+            end = min(cur + dur, e)
+            subtitles.append({"start": start, "end": end, "text": sent})
+            cur = end + 0.2
     return subtitles
 
-# ===== 字幕自动换行 =====
-def format_subtitle_text(text, max_chars=20):
-    """每行最多20字符，智能断句"""
-    if len(text) <= max_chars:
-        return text
-    
-    # 优先在标点处断行
-    punctuation = '，。！？、；：'
-    best_break = -1
-    for i in range(min(max_chars, len(text))):
-        if text[i] in punctuation:
-            best_break = i + 1
-    
-    if best_break > 0 and best_break <= max_chars:
-        return text[:best_break] + '\n' + format_subtitle_text(text[best_break:], max_chars)
-    
-    # 无合适标点时按字数硬换行
-    lines = []
-    while len(text) > max_chars:
-        lines.append(text[:max_chars])
-        text = text[max_chars:]
-    if text:
-        lines.append(text)
-    return '\n'.join(lines)
-
-# ===== 生成 SRT 文件 =====
-def format_srt_time(seconds):
-    """秒数转 SRT 时间格式 HH:MM:SS,mmm"""
-    hours = int(seconds // 3600)
-    minutes = int((seconds % 3600) // 60)
-    secs = int(seconds % 60)
-    millis = int((seconds % 1) * 1000)
-    return f'{hours:02d}:{minutes:02d}:{secs:02d},{millis:03d}'
-
-def generate_srt(subtitles, output_file):
-    """生成 SRT 字幕文件"""
-    with open(output_file, 'w', encoding='utf-8') as f:
-        for i, sub in enumerate(subtitles, 1):
-            formatted_text = format_subtitle_text(sub['text'])
-            f.write(f"{i}\n")
-            f.write(f"{format_srt_time(sub['start'])} --> {format_srt_time(sub['end'])}\n")
-            f.write(f"{formatted_text}\n\n")
-    print(f"✅ 字幕生成: {output_file} ({len(subtitles)} 条)")
-
-# ===== 主流程 =====
-segments = parse_voiceover_segments('voiceover_text.txt')
-subtitles = calculate_subtitle_timing(segments)
-generate_srt(subtitles, 'subtitle.srt')
+def format_subtitle_js(subtitles):
+    """渲染 SUBTITLES = [...] JS 数组字面量"""
+    lines = ["const SUBTITLES = ["]
+    for sub in subtitles:
+        text = json.dumps(sub["text"], ensure_ascii=False)
+        lines.append(
+            f"  {{ start: {sub['start']:.2f}, end: {sub['end']:.2f}, text: {text} }},"
+        )
+    lines.append("];")
+    return "\n".join(lines) + "\n"
 ```
 
-### 字幕时间轴验证
+### 3.5 字幕样式微调
 
-```python
-def validate_subtitles(subtitles, audio_duration):
-    """验证字幕时间轴合理性"""
-    issues = []
-    
-    for i, sub in enumerate(subtitles):
-        # 检查时长合理性
-        duration = sub['end'] - sub['start']
-        if duration < 1.0:
-            issues.append(f"第{i+1}条: 显示时间过短 ({duration:.1f}s)")
-        if duration > 6.0:
-            issues.append(f"第{i+1}条: 显示时间过长 ({duration:.1f}s)")
-        
-        # 检查是否超出音频时长
-        if sub['end'] > audio_duration + 0.5:
-            issues.append(f"第{i+1}条: 超出配音时长 ({sub['end']:.1f}s > {audio_duration:.1f}s)")
-        
-        # 检查重叠
-        if i > 0 and sub['start'] < subtitles[i-1]['end']:
-            issues.append(f"第{i+1}条: 与上一条时间重叠")
-    
-    if issues:
-        print("⚠️ 字幕问题:")
-        for issue in issues:
-            print(f"  - {issue}")
-    else:
-        print("✅ 字幕时间轴验证通过")
-    
-    return len(issues) == 0
-```
+- `font-size` 默认 42px,小字幕可改 36px
+- `background` 默认 `rgba(0,0,0,0.72)`,更透明改为 0.5
+- `bottom` 默认 100px,需更靠下改 60px (但可能与抖音操作栏重叠)
+- `border-radius` 默认 14px,可改 0 (方角)
+- `text-align` 默认 center,可改 left (配合 LTR 文字)
+
+### 3.6 为什么不再用 SRT → ASS 烧录
+
+| 旧方案 (SRT+ASS) | 新方案 (HTML 内嵌) |
+|------------------|--------------------|
+| HTML 截图 → PNG 序列 → ffmpeg 合成 | HTML 截图 → PNG 序列 |
+| 生成 SRT 字幕文件 | SUBTITLES 数组直接写在 HTML |
+| Edge-TTS 配音 | Edge-TTS 配音 |
+| SRT → ASS 转换 | 跳过 |
+| ffmpeg 烧录字幕 (易遇到 Windows 路径问题) | 跳过,字幕随帧捕获 |
+| 合并配音 | 合并配音 |
+| **步骤: 6 步** | **步骤: 4 步** |
+
+新方案消除了 ffmpeg `subtitles=` 滤镜的 Windows 路径问题,并减少一次视频重编码。
+
+### 3.7 与旧 SRT 兼容
+
+如果仍需导出 SRT (例如上传到 B站、YouTube),可在 generate_video.py 中临时启用 `generate_subtitles()` 函数 (旧代码保留,本版本默认关闭)。
 
 ---
 
@@ -432,13 +445,6 @@ def get_audio_duration(audio_path):
     )
     return float(result.stdout.strip())
 
-# ===== 3. 字幕生成（见第3节算法） =====
-def generate_subtitles():
-    # 使用第3节的精准算法
-    from subtitle_utils import parse_voiceover_segments, calculate_subtitle_timing, generate_srt
-    segments = parse_voiceover_segments(os.path.join(OUTPUT_DIR, 'voiceover_text.txt'))
-    subtitles = calculate_subtitle_timing(segments)
-    generate_srt(subtitles, os.path.join(OUTPUT_DIR, 'subtitle.srt'))
 
 # ===== 4. PNG 序列转视频 =====
 def create_video_from_frames():
@@ -481,53 +487,30 @@ def merge_audio(video_file):
     print(f"✅ 音频合并: video_with_audio.mp4")
     return output
 
-# ===== 6. 字幕烧录（Windows 平台专用方案） =====
-def burn_subtitles(video_file):
-    """烧录硬字幕（Windows路径安全方案）"""
+# ===== 6. 合并配音到视频 (字幕已随帧捕获,无需烧录) =====
+def merge_audio(video_file):
+    """合并配音到最终视频"""
+    audio_file = os.path.join(OUTPUT_DIR, 'voiceover.mp3')
     final_output = os.path.join(OUTPUT_DIR, 'video_final.mp4')
-    srt_file = os.path.join(OUTPUT_DIR, 'subtitle.srt')
-    ass_file = os.path.join(OUTPUT_DIR, 'subtitle.ass')
-    
-    # 步骤1: SRT → ASS 转换（必须，避免直接用 SRT 的兼容性问题）
-    subprocess.run(['ffmpeg', '-y', '-i', srt_file, ass_file], check=True)
-    
-    # 步骤2: 切换到工作目录（Windows 路径转义关键！）
-    os.chdir(OUTPUT_DIR)
-    
-    # 步骤3: 使用相对路径烧录字幕
-    # ⚠️ 禁止使用 original_size 参数传路径（常见错误）
-    force_style = (
-        "FontSize=7,"
-        "FontName=Microsoft YaHei,"
-        "PrimaryColour=&H00FFFFFF,"
-        "OutlineColour=&H00000000,"
-        "BorderStyle=1,"
-        "Outline=1,"
-        "Shadow=0,"
-        "MarginV=30,"
-        "MarginL=100,"
-        "MarginR=100,"
-        "Alignment=2"
-    )
-    
+
     cmd = [
         'ffmpeg', '-y',
-        '-i', os.path.basename(video_file),
-        '-vf', f"subtitles='subtitle.ass':force_style='{force_style}'",
-        '-c:v', 'libx264',
-        '-preset', 'slow',
-        '-crf', '18',
-        '-c:a', 'copy',
-        os.path.basename(final_output)
+        '-i', video_file,
+        '-i', audio_file,
+        '-c:v', 'copy',
+        '-c:a', 'aac',
+        '-b:a', '192k',
+        '-shortest',
+        final_output
     ]
     subprocess.run(cmd, check=True)
-    print(f"✅ 字幕烧录: video_final.mp4")
+    print(f"✅ 配音合并: video_final.mp4")
     return final_output
 
 # ===== 7. 清理中间文件 =====
 def cleanup():
-    """清理中间产物（保留 frames 目录！）"""
-    intermediate = ['video_html.mp4', 'video_with_audio.mp4', 'subtitle.ass']
+    """清理中间产物（保留 frames 目录,用于重渲染）"""
+    intermediate = ['video_html.mp4']
     for f in intermediate:
         fp = os.path.join(OUTPUT_DIR, f)
         if os.path.exists(fp):
@@ -536,28 +519,22 @@ def cleanup():
 
 # ===== 主流程 =====
 if __name__ == '__main__':
-    print("🎬 视频生成开始...")
+    print("🎬 视频生成开始（字幕已内嵌 HTML）...")
     print(f"   帧目录: {FRAMES_DIR}")
     print(f"   采集帧率: {CAPTURE_FPS}fps → 输出帧率: {OUTPUT_FPS}fps")
-    
+
     # 1. 生成配音
     audio_duration = asyncio.run(generate_voiceover())
-    
-    # 2. 生成字幕
-    generate_subtitles()
-    
-    # 3. PNG → 视频
+
+    # 2. PNG → 视频（字幕在帧中）
     video = create_video_from_frames()
-    
-    # 4. 合并配音
-    video_audio = merge_audio(video)
-    
-    # 5. 烧录字幕
-    final = burn_subtitles(video_audio)
-    
-    # 6. 清理
+
+    # 3. 合并配音
+    final = merge_audio(video)
+
+    # 4. 清理
     cleanup()
-    
+
     print(f"\n🎉 视频生成完成！")
     print(f"   输出: video_final.mp4")
     print(f"   配音时长: {audio_duration:.1f}s")
@@ -565,35 +542,74 @@ if __name__ == '__main__':
 
 ---
 
-## 5. 字幕样式参数详解
+## 5. 字幕位置与样式（在 video.html 中调整）
 
-### force_style 完整参数表
+字幕样式直接通过 CSS 控制,无需 ffmpeg `force_style`。
 
-| 参数 | 推荐值 | 说明 |
-|------|--------|------|
-| FontSize | 7 | 竖屏1080x1920下不遮挡内容（原28的0.25倍） |
-| FontName | Microsoft YaHei | Windows 中文字体 |
-| PrimaryColour | &H00FFFFFF | 白色文字（BGR格式） |
-| OutlineColour | &H00000000 | 黑色描边 |
-| BorderStyle | 1 | 描边+阴影模式 |
-| Outline | 1 | 描边粗细（确保小字体可读） |
-| Shadow | 0 | 无阴影（保持清爽） |
-| MarginV | 30 | 底部边距 |
-| MarginL | 100 | 左边距（约3字符宽） |
-| MarginR | 100 | 右边距（约3字符宽） |
-| Alignment | 2 | 底部居中 |
+### 字幕条位置
 
-### ⚠️ Windows 平台陷阱
+| 平台 | 推荐 `bottom` | 原因 |
+|------|---------------|------|
+| 抖音/快手/视频号 | 100px | 避开 1620-1920 操作栏 |
+| B站竖屏 | 100px | 同抖音 |
+| 小红书 (3:4) | 80px | 顶部/底部被裁,贴近中间 |
 
-| 问题 | 原因 | 解决方案 |
-|------|------|----------|
-| 路径含反斜杠报错 | `\` 被解析为滤镜转义 | `os.chdir()` + 相对路径 |
-| `original_size` 报错 | 误将路径传给该参数 | 该参数仅接受 `WxH` 格式 |
-| SRT 直接烧录乱码 | SRT 格式兼容性差 | 先转 ASS 再烧录 |
-| 字幕不显示 | 文件编码问题 | 确保 UTF-8 with BOM |
+### 字幕条样式参考
+
+```css
+.subtitle-bar {
+  position: absolute;
+  left: 60px; right: 60px;
+  bottom: 100px;
+  min-height: 80px;
+  padding: 18px 32px;
+  background: rgba(0, 0, 0, 0.72);  /* 半透明黑底 */
+  border-radius: 14px;               /* 圆角 */
+  color: #ffffff;
+  font-size: 42px;                   /* 主字幕 */
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  z-index: 9999;
+}
+```
+
+### 变体: 简洁白字无底
+
+```css
+.subtitle-bar {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 120px;
+  text-align: center;
+  color: #ffffff;
+  font-size: 48px;
+  font-weight: 700;
+  text-shadow:
+    0 0 4px #000, 0 0 8px #000,
+    2px 2px 0 #000, -2px -2px 0 #000,
+    2px -2px 0 #000, -2px 2px 0 #000;
+  /* 黑色描边,白字本身无底,更轻量 */
+}
+```
+
+### 变体: 顶部居中（适合访谈/对话）
+
+```css
+.subtitle-bar {
+  position: absolute;
+  left: 0; right: 0;
+  top: 220px;          /* 顶部状态栏下方 */
+  text-align: center;
+  color: #ffffff;
+  font-size: 38px;
+  font-weight: 600;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+  z-index: 9999;
+}
+```
 
 ---
-
 ## 6. 多分辨率适配
 
 ### 输出规格表
@@ -685,9 +701,9 @@ def verify_output(video_path, expected_duration=None):
 |------|------|------|
 | Playwright 截图 | 45-60 秒 | ~310 帧 @ 5fps |
 | Edge-TTS 配音 | 10-20 秒 | 在线生成 |
-| FFmpeg 合成 | 30-60 秒 | slow preset + 插帧 |
-| 字幕烧录 | 20-30 秒 | ASS 格式 |
-| **总计** | **2-3 分钟** | 完整流程 |
+| FFmpeg PNG→视频 | 30-60 秒 | medium preset + 插帧 |
+| FFmpeg 配音合并 | 5-10 秒 | 视频流 copy |
+| **总计** | **2-3 分钟** | 完整流程 (字幕已内嵌) |
 
 ### 高帧率模式（高质量）
 
@@ -696,8 +712,8 @@ def verify_output(video_path, expected_duration=None):
 | Playwright 截图 | 5-10 分钟 | ~1650 帧 @ 30fps |
 | Edge-TTS 配音 | 10-20 秒 | 在线生成 |
 | FFmpeg 合成 | 1-2 分钟 | slow preset |
-| 字幕烧录 | 20-30 秒 | ASS 格式 |
-| **总计** | **7-13 分钟** | 完整流程 |
+| FFmpeg 配音合并 | 5-10 秒 | 视频流 copy |
+| **总计** | **7-13 分钟** | 完整流程 (字幕已内嵌) |
 
 ---
 
@@ -705,24 +721,26 @@ def verify_output(video_path, expected_duration=None):
 
 ### Q: 字幕时间对不上画面？
 
-**A:** 使用精准字幕算法（第3节），基于语速计算而非固定时长。关键要点：
-- 每个场景首尾留 0.3s 间隔
-- 按字符数比例分配时长
-- 用 `validate_subtitles()` 自动检查
+**A:** 字幕已内嵌 HTML,在 `SUBTITLES` 数组中调整 `start` / `end` 即可。关键要点：
+- 每个场景首尾留 0.3s 间隔（与配音同步）
+- 配音未播完不要切场景
+- 用 `python lib/generate_video.py --export-subtitles subtitles.js` 自动从 `voiceover_text.txt` 生成
+- 重新跑 `node lib/capture.mjs` 让更新生效
 
-### Q: FFmpeg 路径报错（Windows）？
+### Q: 字幕条被抖音操作栏遮挡？
 
-**A:** 三步走：
-1. `os.chdir(OUTPUT_DIR)` 切换到工作目录
-2. 使用相对路径 `subtitle.ass`
-3. 绝对不要在 `original_size` 参数中传路径
+**A:** 调整 CSS `.subtitle-bar { bottom: 100px; }`,把 100 改成 150 或 200。
 
 ### Q: 配音和视频不同步？
 
 **A:** 音画同步三原则：
 1. 先生成配音获取实际时长
 2. 延长 HTML 最后场景的 `data-duration` 确保视频 ≥ 配音时长
-3. SRT 时间戳必须在配音时长范围内
+3. SUBTITLES 数组的 `end` 必须在配音时长范围内
+
+### Q: 想保留 SRT 文件（B站上传用）？
+
+**A:** 新方案默认不生成 SRT。可在 `video.html` 中保留 SUBTITLES 数组 + 临时启用旧 `generate_subtitles()` 函数生成 SRT;或用第三方工具把 SUBTITLES 数组转 SRT。
 
 ### Q: frames 目录为空？
 
