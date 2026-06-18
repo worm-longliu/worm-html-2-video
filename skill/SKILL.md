@@ -11,6 +11,10 @@ description: Create and manage HTML-based vertical video projects for Douyin/Tik
 > 安装、项目结构、CLI 工作流、截图合成、场景时间调整与人工复核等**使用说明**
 > 见 [readme.md](./readme.md)。
 
+> **进阶视觉技法**（CSS 变量系统、Google 字体、噪点/光晕/玻璃态氛围层、几何 mark、
+> 逐场景配色策略、精美度自检）见 [visual-design.md](./visual-design.md)。
+> 基础可读性规范（颜色分级、字号、安全区）见 [css-standards.md](./css-standards.md)。
+
 
 ## HTML 视频页面结构
 
