@@ -24,6 +24,28 @@
 时长由配音反推——`voiceover.py` 按场景合成并测量真实时长，`sync_html.py`
 据此自动更新 `video.html` 的 `data-duration` 与 `SUBTITLES` 时间轴。
 
+### 获取项目
+
+`ash
+# 从 Gitee 克隆（国内推荐）
+git clone https://gitee.com/liulong_oschina/worm-html-2-video.git
+cd worm-html-2-video
+npm install
+
+# 或从 GitHub 克隆
+git clone https://github.com/worm-longliu/worm-html-2-video.git
+cd worm-html-2-video
+npm install
+`
+
+> **Gitee 用户注意**：Gitee 未托管 npm 包，因此 
+px worm-html-2-video 无法直接使用。
+> 请使用 git clone 获取项目后，通过 
+ode bin/cli.js <command> 运行所有命令。
+> 例如：
+ode bin/cli.js init 代替 
+px worm-html-2-video init。
+
 ### 快速开始
 
 ```bash
@@ -56,8 +78,11 @@ npx worm-html-2-video generate
 # 方式一：从 GitHub 安装（npx 拉取并执行 install-skill）
 npx github:worm-longliu/worm-html-2-video install-skill
 
-# 方式二：从 Gitee 安装（国内镜像，速度更快）
-npx https://gitee.com/liulong_oschina/worm-html-2-video.git install-skill
+# 方式二：从 Gitee 安装（git clone + 本地执行）
+# Gitee 未托管 npm 包，无法通过 npx 直接安装，请 clone 后本地执行：
+git clone https://gitee.com/liulong_oschina/worm-html-2-video.git
+cd worm-html-2-video
+node bin/cli.js install-skill
 
 # 方式三：先安装 npm 包再执行（适合已发布到 npm 后）
 npx worm-html-2-video install-skill

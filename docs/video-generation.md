@@ -2,6 +2,10 @@
 
 ## 脚本驱动工作流（每步可人工审核）
 
+> **Gitee 用户注意**：Gitee 未托管 npm 包，`npx worm-html-2-video` 不可用。
+> 请 `git clone` 项目后，用 `node bin/cli.js` 替代所有 `npx worm-html-2-video` 命令。
+> 例如：`node bin/cli.js init` 代替 `npx worm-html-2-video init`。
+
 `
 1. 编写脚本 → script.json（场景规划+字幕+配音文案，不含时间）        ★人工审核
    npx worm-html-2-video init  然后 编辑 script.json

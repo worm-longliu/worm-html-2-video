@@ -27,3 +27,10 @@ Thumbs.db
 # IDE
 .idea/
 .vscode/
+
+# Codex agent artifacts
+.agents/
+skills-lock.json
+
+# Auto-installed Codex skills (not project-owned)
+.agent/skills/frontend-design/

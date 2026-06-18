@@ -2,6 +2,10 @@
 
 ## 配音文案格式（voiceover_text.txt）
 
+> **Gitee 用户注意**：Gitee 未托管 npm 包，`npx worm-html-2-video` 不可用。
+> 请 `git clone` 项目后，用 `node bin/cli.js` 替代所有 `npx worm-html-2-video` 命令。
+> 例如：`node bin/cli.js init` 代替 `npx worm-html-2-video init`。
+>
 > **脚本驱动流程说明**：`voiceover_text.txt` 现在是 `script.json` 的派生物
 > （由 `npx worm-html-2-video script vo` 生成），其中的时间标记为估算值，
 > 仅供人工阅读。权威数据源是 `script.json` 的 `voiceover` / `subtitle` 字段；

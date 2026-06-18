@@ -126,10 +126,15 @@ function cmdInit() {
   console.log('\n📋 Next steps (script-driven workflow):');
   console.log('   1. Edit script.json — scenes, subtitles, voiceover  ★ review');
   console.log('   2. npx worm-html-2-video script html   → video.html  ★ review');
+  console.log('      (Gitee: node bin/cli.js script html)');
   console.log('   3. npx worm-html-2-video voiceover     → voiceover.mp3 + scene_timings.json');
+  console.log('      (Gitee: node bin/cli.js voiceover)');
   console.log('   4. npx worm-html-2-video sync          → adjust video.html to voiceover');
+  console.log('      (Gitee: node bin/cli.js sync)');
   console.log('   5. npx worm-html-2-video capture       → video_html.mp4');
+  console.log('      (Gitee: node bin/cli.js capture)');
   console.log('   6. npx worm-html-2-video generate      → video_final.mp4');
+  console.log('      (Gitee: node bin/cli.js generate)');
   console.log('\n📖 Full docs: https://github.com/worm-longliu/worm-html-2-video');
 }
 
