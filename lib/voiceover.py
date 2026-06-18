@@ -113,9 +113,20 @@ async def synth_scene(text, voice, rate, tmp_path):
     Edge-TTS WordBoundary metadata is unreliable across runs, so the real
     duration is measured from the output mp3 via ffprobe.
     """
-    communicate = edge_tts.Communicate(text, voice, rate=rate)
-    await communicate.save(tmp_path)
-    return _ffprobe_duration(tmp_path)
+    # Edge-TTS intermittently raises NoAudioReceived (server-side hiccups).
+    # Retry up to 3 times with a short delay before giving up.
+    import asyncio as _aio
+    last_err = None
+    for attempt in range(3):
+        try:
+            communicate = edge_tts.Communicate(text, voice, rate=rate)
+            await communicate.save(tmp_path)
+            return _ffprobe_duration(tmp_path)
+        except edge_tts.exceptions.NoAudioReceived as exc:
+            last_err = exc
+            if attempt < 2:
+                await _aio.sleep(1.0)
+    raise last_err
 
 
 def _silence_path(seconds, tmp_dir, idx):
