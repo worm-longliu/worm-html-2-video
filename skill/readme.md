@@ -1,6 +1,7 @@
 # worm-html-2-video Skill 使用说明
 
 本文件收录 `worm-html-2-video` skill 的**基础使用说明**（安装、项目结构、CLI 工作流、截图合成配置、场景时间调整与人工复核流程）。技能本身的创作规范（HTML 结构、动画系统、CSS、字幕、多平台适配等）见 [SKILL.md](./SKILL.md)。
+制作精美场景的进阶视觉技法（CSS 变量系统、Google 字体、噪点/光晕/玻璃态氛围层、几何 mark、逐场景配色）见 [visual-design.md](./visual-design.md)。
 
 ## 快速开始
 
@@ -33,6 +34,7 @@ worm-html-2-video/
 ├── skill/                            # Skill 定义文件
 │   ├── SKILL.md
 │   ├── css-standards.md
+│   ├── visual-design.md
 │   ├── video-copywriting.md
 │   └── video-generation.md
 ├── docs/                             # 技术文档（与 skill 文件同步）
@@ -77,7 +79,8 @@ sync_html.py 据此回填 scenes/ 各场景 HTML 的 data-duration 与局部 SUB
 2. 生成 scenes/ 多文件骨架 → 每场景一个 HTML + index.html（字幕条+SUBTITLES占位+data-duration初值）  ★人工审核/调整
    ├── npx worm-html-2-video script html
    ├── 字幕条 DOM 已内置，SUBTITLES 数组按估算时长生成
-   └── 人工调整场景视觉与动画（帧驱动系统与预览已内置）
+   ├── 人工调整场景视觉与动画（帧驱动系统与预览已内置）
+   └── ★精美化：骨架仅是可读起点，要达到精美效果请参考 [visual-design.md](./visual-design.md)（CSS 变量、字体、氛围层、几何 mark、配色策略）
 
 3. 按场景生成配音 → voiceover.mp3 + scene_timings.json（每场景真实时长）
    ├── npx worm-html-2-video voiceover
