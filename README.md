@@ -24,70 +24,34 @@
 时长由配音反推——`voiceover.py` 按场景合成、测量真实时长并按句拆分得到每句起止（segments），`sync_html.py`
 据此自动更新 `scenes/` 各场景 HTML 的 `data-duration` 与局部 `SUBTITLES` 时间轴。
 
-### 获取项目
+### 安装 Skill
 
-```bash
-# 从 Gitee 克隆（国内推荐）
-git clone https://gitee.com/liulong_oschina/worm-html-2-video.git
-cd worm-html-2-video
-npm install
-
-# 或从 GitHub 克隆
-git clone https://github.com/worm-longliu/worm-html-2-video.git
-cd worm-html-2-video
-npm install
-```
-
-> **Gitee 用户注意**：Gitee 未托管 npm 包，因此 
-npx worm-html-2-video 无法直接使用。
-> 请使用 git clone 获取项目后，通过 
-node bin/cli.js <command> 运行所有命令。
-> 例如：
-node bin/cli.js init 代替 npx worm-html-2-video init。
-
-### 快速开始
-
-```bash
-# 1. 初始化项目（生成 script.json）
-npx worm-html-2-video init
-# 编辑 script.json：场景画面/动画/关键元素/配音文案/字幕文本  ★人工审核
-
-# 2. 由脚本生成 scenes/ 多文件骨架（每场景一个 HTML + index.html，字幕条+SUBTITLES占位+data-duration初值）
-npx worm-html-2-video script html
-# 人工审核/调整各 scenes/scene-N.html 的场景视觉与动画  ★人工审核
-# 调试：浏览器打开 scenes/index.html，← → 切换场景，空格播放该场景配音预览
-
-# 3. 按场景生成配音，记录每场景真实时长 → scene_timings.json
-npx worm-html-2-video voiceover
-
-# 4. 据配音时长自动调整 scenes/ 各场景 HTML（data-duration + 局部 SUBTITLES 时间轴）
-npx worm-html-2-video sync
-
-# 5. Playwright 逐帧截图 → video_html.mp4
-npx worm-html-2-video capture
-
-# 6. 合成最终视频（复用已生成配音）→ video_final.mp4
-npx worm-html-2-video generate
-```
-
-### 安装 Skill 到 Codex
-
-本项目内置一份 Codex skill（`skill/` 目录），安装后 Codex 即可识别 `worm-html-2-video` 技能并辅助你制作 HTML 视频。可通过 GitHub 或 Gitee 两个仓库任一安装（国内网络优先 Gitee）：
+本项目内置一份 Skill（`skill/` 目录），安装后 AI 助手即可识别 `worm-html-2-video` 技能并辅助你制作 HTML 视频。通过 GitHub 或 Gitee 任一仓库安装（国内网络优先 Gitee）：
 
 ```bash
 # 方式一：从 GitHub 安装（npx 拉取并执行 install-skill）
 npx github:worm-longliu/worm-html-2-video install-skill
 
 # 方式二：从 Gitee 安装（git clone + 本地执行）
-# Gitee 未托管 npm 包，无法通过 npx 直接安装，请 clone 后本地执行：
 git clone https://gitee.com/liulong_oschina/worm-html-2-video.git
 cd worm-html-2-video
 node bin/cli.js install-skill
-
 ```
 
-安装目标：`$CODEX_HOME/skills/worm-html-2-video/`（默认 `~/.codex/skills/worm-html-2-video/`）。
-安装后重启 Codex 即可加载该 skill。
+安装目标：`$CODEX_HOME/skills/worm-html-2-video/`（默认 `~/.codex/skills/worm-html-2-video/`）。安装后重启 AI 助手即可加载。
+
+### 中文调用
+
+安装 Skill 后，在 AI 助手对话中用自然语言调用即可，无需记忆命令。典型用法：
+
+```
+/worm-html-2-video 生成一个 worm-html-2-video 的介绍视频脚本
+/worm-html-2-video 根据 script.json 生成 HTML 场景骨架
+/worm-html-2-video 生成配音并嵌入合成语音测试
+/worm-html-2-video 截图并合成最终视频
+```
+
+AI 助手会按“脚本 → HTML → 配音 → 时长同步 → 截图 → 合成”流程自动推进，每步可人工审核调整。
 
 ### 环境要求与自动安装(失败3次后手工兜底)
 
@@ -162,24 +126,6 @@ npx playwright install chromium  # 下载 Chromium 浏览器二进制
 - **Chromium 安装目标:** `%USERPROFILE%\AppData\Local\ms-playwright\chromium-<版本>\`
 - `npm install playwright` 也可全局:`npm install -g playwright`,但项目内已有依赖无需全局。
 - **验证:** `npx playwright --version`
-
-### CLI 命令
-
-| 命令 | 说明 |
-|------|------|
-| `npx worm-html-2-video init` | 在当前目录创建 `script.json` |
-| `npx worm-html-2-video doctor` | 检查环境依赖,缺失项打印手工全局安装指引 |
-| `npx worm-html-2-video script <sub>` | 脚本工具：`validate` / `vo` / `doc` / `html` |
-| `npx worm-html-2-video voiceover` | 按场景配音 → `voiceover.mp3` + `scene_timings.json` |
-| `npx worm-html-2-video sync` | 据配音时长调整 `scenes/` 各场景 HTML（data-duration + SUBTITLES） |
-| `npx worm-html-2-video capture` | Playwright 截图 → `video_html.mp4` |
-| `npx worm-html-2-video generate` | 合成配音 → `video_final.mp4`（复用已有 voiceover.mp3） |
-
-**script 子命令：** `validate`（校验）`vo`（派生 voiceover_text.txt）`doc`（派生 script.md）`html`（生成 scenes/ 多文件骨架）
-**voiceover 选项：** `--script <p>` `--output <p>` `--timings <p>` `--voice <name>` `--rate <rate>` `--scene-gap <s>`
-**sync 选项：** `--html <p>` `--timings <p>` `--script <p>` `--output <p>` `--tail-buffer <s>`
-**capture 选项：** `--html <path>` `--output <path>` `--fps <number>`
-**generate 选项：** `--voiceover <path>` `--input-video <path>` `--output <path>` `--voice <name>` `--rate <rate>` `--no-voiceover`（复用已有 mp3）
 
 ## 项目结构
 
@@ -272,7 +218,7 @@ Playwright 逐帧调用 `gotoFrame()` 截图，实现精确的动画捕获。
 
 - 字幕条在 HTML 中预留位置，截图时随帧一起捕获
 - 无需 SRT/ASS 生成和 ffmpeg 烧录
-- 生成方式：`npx worm-html-2-video script html` 写入初始 SUBTITLES，`npx worm-html-2-video sync` 据配音时长重算 start/end；字幕按句拆分对齐——文本=配音原文，时间=该句真实起止（来自 `scene_timings.json` 的 `segments`），无 segments 时回退到首尾各留 0.3s 的均分算法
+- 生成方式：生成 HTML 场景骨架时写入初始 SUBTITLES，时长同步时据配音时长重算 start/end；字幕按句拆分对齐——文本=配音原文，时间=该句真实起止（来自 `scene_timings.json` 的 `segments`），无 segments 时回退到首尾各留 0.3s 的均分算法
 
 ### 安全区域（抖音）
 
