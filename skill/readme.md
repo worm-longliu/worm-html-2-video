@@ -4,19 +4,22 @@
 
 ## 快速开始
 
-### 安装 Skill 到 Codex
+### 安装 Skill
 
-通过 `npx` 从 GitHub 或 Gitee 任一仓库安装本 skill（国内网络优先 Gitee）：
+通过 GitHub 或 Gitee 任一仓库安装本 skill（国内网络优先 Gitee）：
 
 ```bash
-# 方式一：从 GitHub 安装
+# 方式一：从 GitHub 安装（npx 拉取并执行 install-skill）
 npx github:worm-longliu/worm-html-2-video install-skill
 
-# 方式二：从 Gitee 安装（国内镜像）
-npx https://gitee.com/liulong_oschina/worm-html-2-video.git install-skill
+# 方式二：从 Gitee 安装（git clone + 本地执行）
+# Gitee 未托管 npm 包，请 clone 后本地执行：
+git clone https://gitee.com/liulong_oschina/worm-html-2-video.git
+cd worm-html-2-video
+node bin/cli.js install-skill
 ```
 
-安装目标：`$CODEX_HOME/skills/worm-html-2-video/`（默认 `~/.codex/skills/worm-html-2-video/`）。安装后重启 Codex 即可加载。
+安装目标：`$CODEX_HOME/skills/worm-html-2-video/`（默认 `~/.codex/skills/worm-html-2-video/`）。安装后重启 AI 助手即可加载。
 
 ### 项目结构
 
