@@ -8,44 +8,57 @@
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
-  --bg-0: #0B0E1A; --bg-1: #161B30;
+  --bg-0: #1A0B12; --bg-1: #2A0F1C;
+  --red: #FF5C7A; --red-bright: #FF8FA3; --red-deep: #E63950;
   --amber: #FFB347; --amber-bright: #FFD56B;
-  --cyan: #5EE7FF; --violet: #B14DFF;
-  --text: #F5F7FF; --text-sub: #C9D2F0; --text-dim: #AEB8D8;
+  --cyan: #5EE7FF;
+  --text: #FFFFFF; --text-sub: #E6E6E6; --text-dim: #CCCCCC;
   --glass: rgba(255,255,255,0.05); --glass-border: rgba(255,255,255,0.14);
 }
 body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
-  background: radial-gradient(ellipse at 50% 32%, #1A1530 0%, #0B0E1A 72%);
+  background: radial-gradient(ellipse at 50% 30%, #2A0F1C 0%, #14060C 72%);
   font-family: "Noto Sans SC","Microsoft YaHei",sans-serif; -webkit-font-smoothing: antialiased; }
 .bg-noise { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.05;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E"); }
-.glow { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.32; z-index: 0; pointer-events: none; }
-.glow.amber { width: 520px; height: 520px; background: var(--amber); top: 10%; left: -120px; }
-.glow.cyan { width: 460px; height: 460px; background: var(--cyan); bottom: 14%; right: -100px; opacity: 0.24; }
-.scene { position: absolute; inset: 0; padding: 160px 70px 280px; display: flex; flex-direction: column;
+.glow { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.36; z-index: 0; pointer-events: none; }
+.glow.red { width: 560px; height: 560px; background: var(--red); top: 8%; left: -140px; opacity: 0.34; }
+.glow.amber { width: 420px; height: 420px; background: var(--amber); bottom: 16%; right: -120px; opacity: 0.20; }
+.scene { position: absolute; inset: 0; padding: 200px 70px 300px; display: flex; flex-direction: column;
   align-items: center; justify-content: center; z-index: 1; }
 .anim { opacity: 0; transform: translateY(30px); }
-.s1-ring-wrap { position: relative; width: 360px; height: 360px; margin-bottom: 80px; }
-.s1-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid transparent;
-  border-top-color: var(--amber); border-right-color: var(--cyan);
-  box-shadow: 0 0 40px rgba(255,179,71,0.4); animation: s1-spin 6s linear infinite; }
-.s1-ring.inner { inset: 44px; border-top-color: var(--cyan); border-right-color: var(--amber);
-  border-left-color: transparent; border-bottom-color: transparent;
-  animation: s1-spin 4s linear infinite reverse; box-shadow: 0 0 30px rgba(94,231,255,0.3); }
+.s1-mark-wrap { position: relative; width: 380px; height: 380px; margin-bottom: 90px;
+  display: flex; align-items: center; justify-content: center; }
+.s1-mark-ring { position: absolute; inset: 0; border-radius: 50%;
+  border: 3px solid transparent; border-top-color: var(--red); border-right-color: var(--red-bright);
+  box-shadow: 0 0 50px rgba(255,92,122,0.45), inset 0 0 40px rgba(255,92,122,0.18);
+  animation: s1-spin 5s linear infinite; }
+.s1-mark-ring.inner { inset: 46px; border-top-color: var(--amber); border-right-color: transparent;
+  border-left-color: var(--red); border-bottom-color: transparent;
+  animation: s1-spin 3.5s linear infinite reverse; box-shadow: 0 0 30px rgba(255,179,71,0.3); }
 @keyframes s1-spin { to { transform: rotate(360deg); } }
-.s1-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-  font-family: "Bricolage Grotesque",monospace; font-size: 96px; font-weight: 800; color: var(--text);
-  text-shadow: 0 0 24px var(--amber), 0 0 48px var(--cyan); }
-.s1-eyebrow { font-family: "Bricolage Grotesque",sans-serif; font-size: 28px; font-weight: 600;
-  letter-spacing: 0.4em; color: var(--amber); text-transform: uppercase; margin-bottom: 28px; text-align: center; }
-.s1-title { font-family: "Bricolage Grotesque","Noto Sans SC",sans-serif; font-size: 92px; font-weight: 800;
-  line-height: 1.08; text-align: center; margin-bottom: 26px; color: var(--text); }
-.s1-title .hl { background: linear-gradient(180deg, var(--amber-bright) 0%, var(--amber) 100%);
-  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-.s1-tag { font-size: 32px; font-weight: 500; color: var(--text-sub); padding: 14px 36px;
-  border: 1px solid var(--glass-border); border-radius: 999px; background: var(--glass);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-.s1-tag .mono { font-family: "JetBrains Mono",monospace; color: var(--cyan); }
+.s1-mark-core { width: 240px; height: 240px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, var(--red-bright) 0%, var(--red) 55%, var(--red-deep) 100%);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 80px rgba(255,92,122,0.6), 0 0 160px rgba(255,92,122,0.35),
+    inset 0 -20px 40px rgba(230,57,80,0.5), inset 0 20px 40px rgba(255,255,255,0.15); }
+.s1-mark-core::after { content: "!"; font-family: "Bricolage Grotesque",sans-serif;
+  font-size: 200px; font-weight: 800; color: #FFFFFF; line-height: 1;
+  text-shadow: 0 4px 24px rgba(0,0,0,0.4); transform: translateY(-6px); }
+.s1-eyebrow { font-family: "Bricolage Grotesque",sans-serif; font-size: 30px; font-weight: 600;
+  letter-spacing: 0.42em; color: var(--red-bright); text-transform: uppercase;
+  margin-bottom: 30px; text-align: center; padding: 8px 28px;
+  border: 1px solid rgba(255,92,122,0.4); border-radius: 999px; background: rgba(255,92,122,0.08); }
+.s1-title { font-family: "Bricolage Grotesque","Noto Sans SC",sans-serif; font-size: 84px; font-weight: 800;
+  line-height: 1.18; text-align: center; margin-bottom: 32px; color: var(--text); }
+.s1-title .hl { color: var(--red-bright);
+  text-shadow: 0 0 28px rgba(255,92,122,0.5); }
+.s1-sub { font-size: 36px; font-weight: 500; line-height: 1.55; color: var(--text-sub);
+  text-align: center; max-width: 880px; }
+.s1-sub .mono { font-family: "JetBrains Mono",monospace; color: var(--amber-bright); font-weight: 700; }
+.s1-foot { position: absolute; bottom: 360px; left: 0; right: 0; text-align: center;
+  font-family: "JetBrains Mono",monospace; font-size: 28px; color: var(--text-dim);
+  letter-spacing: 0.1em; }
+.s1-foot .dot { color: var(--red); padding: 0 14px; }
 .subtitle-bar { position: absolute; left: 60px; right: 60px; bottom: 100px; min-height: 80px;
   padding: 22px 36px; background: rgba(0,0,0,0.78); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border); border-radius: 18px; color: #FFFFFF; font-size: 44px; font-weight: 600;
@@ -57,37 +70,38 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 </style>
 </head>
 <body>
-<div class="debug-hint">场景 1/8 | ← → 切换 | 空格播放配音</div>
+<div class="debug-hint">场景 1/6 | ← → 切换 | 空格播放配音</div>
 <div class="bg-noise"></div>
+<div class="glow red"></div>
 <div class="glow amber"></div>
-<div class="glow cyan"></div>
 <div id="subtitle-bar" class="subtitle-bar"></div>
 <audio id="vo" src="voiceover_scene_1.mp3" preload="auto"></audio>
-<div id="scene-1" class="scene" data-duration="4.6">
-  <div class="anim s1-ring-wrap" data-delay="0" data-dur="0.6">
-    <div class="s1-ring"></div>
-    <div class="s1-ring inner"></div>
-    <div class="s1-badge">&lt;/&gt;</div>
+<div id="scene-1" class="scene" data-duration="7.4">
+  <div class="anim s1-mark-wrap" data-delay="0" data-dur="0.6">
+    <div class="s1-mark-ring"></div>
+    <div class="s1-mark-ring inner"></div>
+    <div class="s1-mark-core"></div>
   </div>
-  <div class="anim s1-eyebrow" data-delay="0.8" data-dur="0.4">HTML → VIDEO</div>
-  <div class="anim s1-title" data-delay="1.0" data-dur="0.6">还在为做视频发愁？<br><span class="hl">HTML 就能做视频！</span></div>
-  <div class="anim s1-tag" data-delay="1.8" data-dur="0.5"><span class="mono">&lt;/&gt;</span> 会写网页就能出片</div>
+  <div class="anim s1-eyebrow" data-delay="0.6" data-dur="0.4">PAIN POINT</div>
+  <div class="anim s1-title" data-delay="0.6" data-dur="0.6">做视频，<span class="hl">还在学软件？</span></div>
+  <div class="anim s1-sub" data-delay="1.8" data-dur="0.5">装软件半天，<span class="mono">3 天</span>才出一个短视频</div>
+  <div class="anim s1-foot" data-delay="2.4" data-dur="0.4">特效软件<span class="dot">·</span>剪辑软件<span class="dot">·</span>学不完的工具</div>
 </div>
 <script>
 const FPS = 30;
 const SCENE_FADE_FRAMES = 8;
 const SCENE_ID = 1;
-const SCENE_TOTAL = 8;
+const SCENE_TOTAL = 6;
 const SUBTITLES = [
   {
     "start": 0.0,
-    "end": 2.09,
-    "text": "还在为做视频发愁？"
+    "end": 3.88,
+    "text": "做视频还在学特效软件学剪辑软件？"
   },
   {
-    "start": 2.09,
-    "end": 4.61,
-    "text": "HTML 就能做视频！"
+    "start": 3.88,
+    "end": 7.44,
+    "text": "装软件就半天，一个短视频做三天。"
   }
 ];
 const subtitleBar = document.getElementById('subtitle-bar');
@@ -105,15 +119,17 @@ const totalFrames = Math.round(parseFloat(sceneEl.dataset.duration) * FPS);
 function easeOut(t) { return 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3); }
 function renderFrame(frame) {
   updateSubtitle(frame / FPS);
+  const localFrame = frame;
+  const total = totalFrames;
   let op = 1;
-  if (frame < SCENE_FADE_FRAMES) op = easeOut(frame / SCENE_FADE_FRAMES);
-  else if (frame > totalFrames - SCENE_FADE_FRAMES) op = easeOut((totalFrames - frame) / SCENE_FADE_FRAMES);
+  if (localFrame < SCENE_FADE_FRAMES) op = easeOut(localFrame / SCENE_FADE_FRAMES);
+  else if (localFrame > total - SCENE_FADE_FRAMES) op = easeOut((total - localFrame) / SCENE_FADE_FRAMES);
   sceneEl.style.opacity = op;
   sceneEl.querySelectorAll('.anim').forEach(an => {
     const dly = Math.round(parseFloat(an.dataset.delay) * FPS);
     const du = Math.round(parseFloat(an.dataset.dur) * FPS);
-    if (frame < dly) { an.style.opacity = '0'; an.style.transform = 'translateY(30px)'; }
-    else if (frame < dly + du) { const p = (frame - dly) / du; const e = easeOut(p); an.style.opacity = e; an.style.transform = 'translateY(' + (30*(1-e)) + 'px)'; }
+    if (localFrame < dly) { an.style.opacity = '0'; an.style.transform = 'translateY(30px)'; }
+    else if (localFrame < dly + du) { const p = (localFrame - dly) / du; const e = easeOut(p); an.style.opacity = e; an.style.transform = 'translateY(' + (30*(1-e)) + 'px)'; }
     else { an.style.opacity = '1'; an.style.transform = 'translateY(0)'; }
   });
 }

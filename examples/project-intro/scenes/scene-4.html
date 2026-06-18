@@ -8,41 +8,58 @@
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
-  --bg-0: #0B0E1A; --bg-1: #161B30;
+  --bg-0: #1A0E2E; --bg-1: #2E1640; --bg-2: #3D1A1A;
   --amber: #FFB347; --amber-bright: #FFD56B;
-  --cyan: #5EE7FF; --green: #7EE787;
-  --text: #F5F7FF; --text-sub: #C9D2F0; --text-dim: #AEB8D8;
-  --glass: rgba(255,255,255,0.05); --glass-border: rgba(255,255,255,0.14);
+  --violet: #9D6FE0; --cyan: #5EE7FF; --green: #7EE787;
+  --text: #F5F0FF; --text-sub: #E8DFFF; --text-dim: #C9BEE8;
+  --glass: rgba(255,255,255,0.06); --glass-border: rgba(255,255,255,0.16);
 }
 body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
-  background: radial-gradient(ellipse at 50% 20%, #1B1A2E 0%, #0B0E1A 70%);
+  background:
+    radial-gradient(ellipse 900px 700px at 50% 12%, rgba(255,179,71,0.30) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 600px at 88% 70%, rgba(157,111,224,0.32) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 600px at 12% 80%, rgba(255,138,80,0.26) 0%, transparent 60%),
+    linear-gradient(160deg, #2E1640 0%, #3D1A1A 55%, #1A0E2E 100%);
   font-family: "Noto Sans SC","Microsoft YaHei",sans-serif; -webkit-font-smoothing: antialiased; }
-.bg-noise { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.05;
+.bg-noise { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.06;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E"); }
-.scene { position: absolute; inset: 0; padding: 140px 70px 280px; display: flex; flex-direction: column; z-index: 1; }
+.glow { position: absolute; border-radius: 50%; filter: blur(80px); z-index: 0; pointer-events: none; }
+.glow-1 { width: 520px; height: 520px; top: -80px; left: -120px; background: rgba(255,179,71,0.40); }
+.glow-2 { width: 600px; height: 600px; bottom: 220px; right: -180px; background: rgba(157,111,224,0.42); }
+.scene { position: absolute; inset: 0; padding: 150px 64px 260px; display: flex; flex-direction: column; z-index: 1; }
 .anim { opacity: 0; transform: translateY(30px); }
 .eyebrow { font-family: "Bricolage Grotesque",sans-serif; font-size: 26px; font-weight: 600;
-  letter-spacing: 0.35em; color: var(--amber); text-transform: uppercase; margin-bottom: 20px; }
-.s4-title { font-family: "Bricolage Grotesque","Noto Sans SC",sans-serif; font-size: 62px; font-weight: 800;
-  line-height: 1.15; color: var(--text); margin-bottom: 16px; }
-.s4-title em { font-style: normal; color: var(--amber); }
-.s4-sub { font-size: 30px; color: var(--text-dim); margin-bottom: 44px; }
-.steps { display: flex; flex-direction: column; gap: 18px; }
-.step { display: flex; align-items: center; gap: 26px; padding: 22px 30px; border-radius: 18px;
-  background: var(--glass); border: 1px solid var(--glass-border); backdrop-filter: blur(10px); }
-.step.last { background: linear-gradient(90deg, rgba(126,231,135,0.18), rgba(255,179,71,0.08));
-  border: 1px solid rgba(126,231,135,0.55); box-shadow: 0 0 26px rgba(126,231,135,0.22); }
+  letter-spacing: 0.38em; color: var(--amber-bright); text-transform: uppercase; margin-bottom: 18px; }
+.s4-title { font-family: "Bricolage Grotesque","Noto Sans SC",sans-serif; font-size: 64px; font-weight: 800;
+  line-height: 1.12; color: var(--text); margin-bottom: 12px; }
+.s4-title em { font-style: normal; color: var(--amber-bright); }
+.s4-sub { font-size: 28px; color: var(--text-dim); margin-bottom: 30px; font-weight: 500; }
+.steps { display: flex; flex-direction: column; gap: 0; flex: 1; justify-content: flex-start; }
+.step { display: flex; align-items: center; gap: 24px; padding: 18px 28px; border-radius: 16px;
+  background: var(--glass); border: 1px solid var(--glass-border); backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px); position: relative; }
+.step.last { background: linear-gradient(90deg, rgba(255,179,71,0.22), rgba(157,111,224,0.12));
+  border: 1.5px solid rgba(255,213,107,0.75); box-shadow: 0 0 30px rgba(255,179,71,0.30), inset 0 0 20px rgba(255,213,107,0.10); }
 .step-num { font-family: "Bricolage Grotesque",monospace; font-size: 30px; font-weight: 800;
-  color: var(--amber); width: 56px; flex-shrink: 0; }
-.step.last .step-num { color: var(--green); }
-.step-icon { font-size: 34px; width: 50px; text-align: center; flex-shrink: 0; }
+  color: var(--amber); width: 56px; height: 56px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: rgba(255,179,71,0.14); border: 1.5px solid rgba(255,179,71,0.55); }
+.step.last .step-num { color: var(--amber-bright); background: rgba(255,213,107,0.20); border-color: rgba(255,213,107,0.85); }
 .step-body { flex: 1; }
-.step-name { font-size: 33px; font-weight: 700; color: var(--text); }
-.step-desc { font-size: 22px; color: var(--text-dim); margin-top: 2px; }
-.step.last .step-name { color: var(--green); }
+.step-name { font-size: 32px; font-weight: 700; color: var(--text); line-height: 1.2; }
+.step.last .step-name { color: var(--amber-bright); }
+.step-desc { font-size: 21px; color: var(--text-dim); margin-top: 3px; }
+.step-tag { font-family: "JetBrains Mono",monospace; font-size: 20px; color: var(--cyan); flex-shrink: 0;
+  background: rgba(94,231,255,0.08); border: 1px solid rgba(94,231,255,0.30); padding: 6px 14px; border-radius: 10px; }
+.check { font-family: "Bricolage Grotesque",sans-serif; font-size: 42px; font-weight: 800; color: var(--amber-bright);
+  flex-shrink: 0; width: 60px; text-align: center; text-shadow: 0 0 18px rgba(255,213,107,0.9); }
+.arrow { align-self: center; width: 2px; height: 22px; background: linear-gradient(180deg, rgba(94,231,255,0.15), var(--cyan), rgba(94,231,255,0.15));
+  position: relative; flex-shrink: 0; }
+.arrow::after { content: ""; position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%);
+  width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent;
+  border-top: 9px solid var(--cyan); filter: drop-shadow(0 0 4px rgba(94,231,255,0.6)); }
 .subtitle-bar { position: absolute; left: 60px; right: 60px; bottom: 100px; min-height: 80px;
   padding: 22px 36px; background: rgba(0,0,0,0.78); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border); border-radius: 18px; color: #FFFFFF; font-size: 44px; font-weight: 600;
+  border: 1px solid var(--glass-border); border-radius: 18px; color: #FFFFFF; font-size: 42px; font-weight: 600;
   line-height: 1.4; text-align: center; z-index: 9999; opacity: 0; transition: opacity 0.12s linear;
   text-shadow: 0 2px 12px rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
   white-space: pre-line; word-break: break-word; }
@@ -51,38 +68,45 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 </style>
 </head>
 <body>
-<div class="debug-hint">场景 4/8 | ← → 切换 | 空格播放配音</div>
+<div class="debug-hint">场景 4/6 | ← → 切换 | 空格播放配音</div>
 <div class="bg-noise"></div>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
 <div id="subtitle-bar" class="subtitle-bar"></div>
 <audio id="vo" src="voiceover_scene_4.mp3" preload="auto"></audio>
-<div id="scene-4" class="scene" data-duration="11.3">
+<div id="scene-4" class="scene" data-duration="9.2">
   <div class="anim eyebrow" data-delay="0" data-dur="0.5">PIPELINE</div>
-  <div class="anim s4-title" data-delay="0.4" data-dur="0.6">全程<em>六步</em>自动化</div>
-  <div class="anim s4-sub" data-delay="0.9" data-dur="0.4">一行命令，从脚本到成片</div>
+  <div class="anim s4-title" data-delay="0.1" data-dur="0.5">六步<em>流水线</em>自动化</div>
+  <div class="anim s4-sub" data-delay="0.3" data-dur="0.4">一行命令，从脚本到成片</div>
   <div class="steps">
-    <div class="anim step" data-delay="1.4" data-dur="0.4"><span class="step-num">01</span><span class="step-icon">📝</span><div class="step-body"><div class="step-name">编写脚本</div><div class="step-desc">script.json 唯一数据源</div></div></div>
-    <div class="anim step" data-delay="1.9" data-dur="0.4"><span class="step-num">02</span><span class="step-icon">🎨</span><div class="step-body"><div class="step-name">生成 HTML</div><div class="step-desc">scenes/ 多场景骨架</div></div></div>
-    <div class="anim step" data-delay="2.4" data-dur="0.4"><span class="step-num">03</span><span class="step-icon">🔊</span><div class="step-body"><div class="step-name">Edge-TTS 配音</div><div class="step-desc">按场景合成并测时长</div></div></div>
-    <div class="anim step" data-delay="2.9" data-dur="0.4"><span class="step-num">04</span><span class="step-icon">⏱</span><div class="step-body"><div class="step-name">同步时间轴</div><div class="step-desc">data-duration + 字幕对齐</div></div></div>
-    <div class="anim step" data-delay="3.4" data-dur="0.4"><span class="step-num">05</span><span class="step-icon">📸</span><div class="step-body"><div class="step-name">帧采集编码</div><div class="step-desc">Playwright 截图 → MP4</div></div></div>
-    <div class="anim step last" data-delay="3.9" data-dur="0.5"><span class="step-num">06</span><span class="step-icon">✓</span><div class="step-body"><div class="step-name">合成输出</div><div class="step-desc">voiceover.mp3 合入 → video_final.mp4</div></div></div>
+    <div class="anim step" data-delay="0.6" data-dur="0.4"><span class="step-num">1</span><div class="step-body"><div class="step-name">写脚本</div><div class="step-desc">script.json 唯一数据源</div></div><span class="step-tag">init</span></div>
+    <div class="anim arrow" data-delay="0.6" data-dur="0.3"></div>
+    <div class="anim step" data-delay="1.0" data-dur="0.4"><span class="step-num">2</span><div class="step-body"><div class="step-name">生成页面</div><div class="step-desc">scenes/ 多场景骨架</div></div><span class="step-tag">script</span></div>
+    <div class="anim arrow" data-delay="1.0" data-dur="0.3"></div>
+    <div class="anim step" data-delay="1.4" data-dur="0.4"><span class="step-num">3</span><div class="step-body"><div class="step-name">配音</div><div class="step-desc">Edge-TTS 按场景合成</div></div><span class="step-tag">voiceover</span></div>
+    <div class="anim arrow" data-delay="1.4" data-dur="0.3"></div>
+    <div class="anim step" data-delay="1.8" data-dur="0.4"><span class="step-num">4</span><div class="step-body"><div class="step-name">对时间轴</div><div class="step-desc">data-duration + 字幕对齐</div></div><span class="step-tag">sync</span></div>
+    <div class="anim arrow" data-delay="1.8" data-dur="0.3"></div>
+    <div class="anim step" data-delay="2.2" data-dur="0.4"><span class="step-num">5</span><div class="step-body"><div class="step-name">截图</div><div class="step-desc">Playwright 帧采集 → MP4</div></div><span class="step-tag">capture</span></div>
+    <div class="anim arrow" data-delay="2.2" data-dur="0.3"></div>
+    <div class="anim step last" data-delay="2.6" data-dur="0.5"><span class="step-num">6</span><div class="step-body"><div class="step-name">合成</div><div class="step-desc">voiceover 合入 → video_final</div></div><span class="anim check" data-delay="3.0" data-dur="0.4">&#10003;</span></div>
   </div>
 </div>
 <script>
 const FPS = 30;
 const SCENE_FADE_FRAMES = 8;
 const SCENE_ID = 4;
-const SCENE_TOTAL = 8;
+const SCENE_TOTAL = 6;
 const SUBTITLES = [
   {
     "start": 0.0,
-    "end": 8.9,
-    "text": "全程六步自动化：编写脚本、生成 HTML、Edge-TTS 配音、同步时间轴、帧采集编码、合成输出。"
+    "end": 7.35,
+    "text": "全程六步自动化：写脚本、生成页面、配音、对时间轴、截图、合成。"
   },
   {
-    "start": 8.9,
-    "end": 11.33,
-    "text": "一条命令全自动完成。"
+    "start": 7.35,
+    "end": 9.19,
+    "text": "一条命令搞定。"
   }
 ];
 const subtitleBar = document.getElementById('subtitle-bar');
@@ -100,15 +124,17 @@ const totalFrames = Math.round(parseFloat(sceneEl.dataset.duration) * FPS);
 function easeOut(t) { return 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3); }
 function renderFrame(frame) {
   updateSubtitle(frame / FPS);
+  const localFrame = frame;
+  const total = totalFrames;
   let op = 1;
-  if (frame < SCENE_FADE_FRAMES) op = easeOut(frame / SCENE_FADE_FRAMES);
-  else if (frame > totalFrames - SCENE_FADE_FRAMES) op = easeOut((totalFrames - frame) / SCENE_FADE_FRAMES);
+  if (localFrame < SCENE_FADE_FRAMES) op = easeOut(localFrame / SCENE_FADE_FRAMES);
+  else if (localFrame > total - SCENE_FADE_FRAMES) op = easeOut((total - localFrame) / SCENE_FADE_FRAMES);
   sceneEl.style.opacity = op;
   sceneEl.querySelectorAll('.anim').forEach(an => {
     const dly = Math.round(parseFloat(an.dataset.delay) * FPS);
     const du = Math.round(parseFloat(an.dataset.dur) * FPS);
-    if (frame < dly) { an.style.opacity = '0'; an.style.transform = 'translateY(30px)'; }
-    else if (frame < dly + du) { const p = (frame - dly) / du; const e = easeOut(p); an.style.opacity = e; an.style.transform = 'translateY(' + (30*(1-e)) + 'px)'; }
+    if (localFrame < dly) { an.style.opacity = '0'; an.style.transform = 'translateY(30px)'; }
+    else if (localFrame < dly + du) { const p = (localFrame - dly) / du; const e = easeOut(p); an.style.opacity = e; an.style.transform = 'translateY(' + (30*(1-e)) + 'px)'; }
     else { an.style.opacity = '1'; an.style.transform = 'translateY(0)'; }
   });
 }

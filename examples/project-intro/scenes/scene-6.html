@@ -10,38 +10,55 @@
 :root {
   --bg-0: #0B0E1A; --bg-1: #161B30;
   --amber: #FFB347; --amber-bright: #FFD56B;
-  --cyan: #5EE7FF; --red: #FF5C7A;
+  --cyan: #5EE7FF; --green: #7EE787;
   --text: #F5F7FF; --text-sub: #C9D2F0; --text-dim: #AEB8D8;
   --glass: rgba(255,255,255,0.05); --glass-border: rgba(255,255,255,0.14);
 }
 body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
-  background: radial-gradient(ellipse at 50% 20%, #1A1428 0%, #0B0E1A 70%);
+  background: radial-gradient(ellipse at 50% 40%, #1A1530 0%, #0B0E1A 75%);
   font-family: "Noto Sans SC","Microsoft YaHei",sans-serif; -webkit-font-smoothing: antialiased; }
 .bg-noise { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.05;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E"); }
-.scene { position: absolute; inset: 0; padding: 140px 70px 280px; display: flex; flex-direction: column; z-index: 1; }
+.glow { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.3; z-index: 0; pointer-events: none; }
+.glow.amber { width: 520px; height: 520px; background: var(--amber); top: 14%; left: -120px; }
+.glow.cyan { width: 460px; height: 460px; background: var(--cyan); bottom: 14%; right: -90px; opacity: 0.22; }
+.scene { position: absolute; inset: 0; padding: 200px 70px 280px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; z-index: 1; }
 .anim { opacity: 0; transform: translateY(30px); }
-.eyebrow { font-family: "Bricolage Grotesque",sans-serif; font-size: 26px; font-weight: 600;
-  letter-spacing: 0.35em; color: var(--amber); text-transform: uppercase; margin-bottom: 20px; }
-.s6-title { font-family: "Bricolage Grotesque","Noto Sans SC",sans-serif; font-size: 60px; font-weight: 800;
-  line-height: 1.15; color: var(--text); margin-bottom: 40px; }
-.table { display: flex; flex-direction: column; border-radius: 22px; overflow: hidden;
-  border: 1px solid var(--glass-border); backdrop-filter: blur(12px); }
-.row { display: grid; grid-template-columns: 1.2fr 1fr 1fr; align-items: center; padding: 26px 28px; }
-.row.head { background: rgba(255,255,255,0.06); font-family: "Bricolage Grotesque",sans-serif;
-  font-size: 24px; font-weight: 700; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
-.row.head .col-old { color: var(--red); }
-.row.head .col-new { color: var(--amber-bright); }
-.row + .row { border-top: 1px solid var(--glass-border); }
-.col-label { font-size: 32px; font-weight: 600; color: var(--text-sub); }
-.col-old { font-size: 30px; color: var(--red); font-weight: 600; }
-.col-new { font-size: 30px; color: var(--amber-bright); font-weight: 700; }
-.big { margin-top: 44px; display: flex; align-items: center; justify-content: center; gap: 30px; }
-.big-num { font-family: "Bricolage Grotesque",sans-serif; font-size: 140px; font-weight: 800; line-height: 1; }
-.big-num.old { color: var(--red); text-decoration: line-through; text-decoration-thickness: 8px; }
-.big-num.new { color: var(--amber-bright); text-shadow: 0 0 40px rgba(255,213,107,0.5); }
-.big-arrow { font-family: "Bricolage Grotesque",sans-serif; font-size: 80px; color: var(--cyan); }
-.big-unit { font-size: 40px; color: var(--text-dim); }
+.orbit-wrap { position: relative; width: 300px; height: 300px; margin-bottom: 64px; }
+.orbit { position: absolute; inset: 0; border-radius: 50%; border: 2px solid transparent;
+  border-top-color: var(--amber); border-right-color: var(--cyan);
+  box-shadow: 0 0 44px rgba(255,179,71,0.4); animation: spin 6s linear infinite; }
+.orbit.inner { inset: 42px; border-top-color: var(--cyan); border-right-color: var(--amber);
+  border-left-color: transparent; border-bottom-color: transparent;
+  animation: spin 4s linear infinite reverse; box-shadow: 0 0 32px rgba(94,231,255,0.3); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.orbit-dot { position: absolute; top: -7px; left: 50%; width: 14px; height: 14px; margin-left: -7px;
+  border-radius: 50%; background: var(--amber-bright);
+  box-shadow: 0 0 18px var(--amber), 0 0 32px var(--amber-bright); }
+.orbit.inner .orbit-dot { background: var(--cyan); box-shadow: 0 0 18px var(--cyan), 0 0 32px var(--cyan); }
+.proj-title { font-family: "JetBrains Mono","Bricolage Grotesque",monospace; font-size: 76px; font-weight: 700;
+  letter-spacing: -0.01em; line-height: 1.1; text-align: center; margin-bottom: 36px;
+  background: linear-gradient(110deg, var(--amber-bright) 0%, #FFFFFF 40%, var(--cyan) 70%, var(--amber-bright) 100%);
+  background-size: 220% auto;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  animation: shimmer 5s linear infinite;
+  filter: drop-shadow(0 0 28px rgba(255,213,107,0.35)); }
+@keyframes shimmer { to { background-position: 220% center; } }
+.proj-title .accent { display: block; font-size: 30px; font-weight: 500; letter-spacing: 0.32em;
+  margin-top: 22px; -webkit-text-fill-color: var(--text-dim); background: none; filter: none; }
+.open-tag { font-family: "Bricolage Grotesque","Noto Sans SC",sans-serif; font-size: 34px; font-weight: 800;
+  letter-spacing: 0.16em; color: var(--amber-bright);
+  padding: 16px 44px; border-radius: 16px;
+  background: rgba(255,179,71,0.10);
+  border: 1.5px solid var(--amber);
+  box-shadow: 0 0 32px rgba(255,179,71,0.35), inset 0 0 22px rgba(255,213,107,0.12);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); margin-bottom: 52px; }
+.open-tag .star { color: var(--amber); margin: 0 6px; }
+.bottom-cta { font-size: 40px; font-weight: 700; color: var(--text); text-align: center; line-height: 1.5;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.5); }
+.bottom-cta .hl { color: var(--cyan); }
+.bottom-cta .arrow { display: inline-block; color: var(--amber-bright); margin: 0 8px; }
 .subtitle-bar { position: absolute; left: 60px; right: 60px; bottom: 100px; min-height: 80px;
   padding: 22px 36px; background: rgba(0,0,0,0.78); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border); border-radius: 18px; color: #FFFFFF; font-size: 44px; font-weight: 600;
@@ -53,45 +70,40 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 </style>
 </head>
 <body>
-<div class="debug-hint">场景 6/8 | ← → 切换 | 空格播放配音</div>
+<div class="debug-hint">场景 6/6 | ← → 切换 | 空格播放配音</div>
 <div class="bg-noise"></div>
+<div class="glow amber"></div>
+<div class="glow cyan"></div>
 <div id="subtitle-bar" class="subtitle-bar"></div>
 <audio id="vo" src="voiceover_scene_6.mp3" preload="auto"></audio>
-<div id="scene-6" class="scene" data-duration="12.5">
-  <div class="anim eyebrow" data-delay="0" data-dur="0.5">COMPARISON</div>
-  <div class="anim s6-title" data-delay="0.4" data-dur="0.6">效率对比</div>
-  <div class="anim table" data-delay="0.9" data-dur="0.5">
-    <div class="row head"><span>维度</span><span class="col-old">传统方案</span><span class="col-new">本方案</span></div>
-    <div class="row"><span class="col-label">学习成本</span><span class="col-old">几个月</span><span class="col-new">会写网页就行</span></div>
-    <div class="row"><span class="col-label">制作周期</span><span class="col-old">3 天</span><span class="col-new">3 分钟</span></div>
-    <div class="row"><span class="col-label">工具链</span><span class="col-old">AE + PR + 插件</span><span class="col-new">HTML + CLI</span></div>
+<div id="scene-6" class="scene" data-duration="7.1">
+  <div class="anim orbit-wrap" data-delay="0" data-dur="0.6">
+    <div class="orbit">
+      <div class="orbit-dot"></div>
+    </div>
+    <div class="orbit inner">
+      <div class="orbit-dot"></div>
+    </div>
   </div>
-  <div class="anim big" data-delay="2.2" data-dur="0.6">
-    <span class="big-num old">3<span class="big-unit">天</span></span>
-    <span class="big-arrow">→</span>
-    <span class="big-num new">3<span class="big-unit">分钟</span></span>
-  </div>
+  <div class="anim proj-title" data-delay="0.6" data-dur="0.6">worm-html-2-video<span class="accent">HTML · 视频生成工具</span></div>
+  <div class="anim open-tag" data-delay="1.6" data-dur="0.5">开源免费<span class="star">★</span>OPEN SOURCE</div>
+  <div class="anim bottom-cta" data-delay="2.6" data-dur="0.5">会写网页就行<span class="arrow">→</span><span class="hl">快来试试吧</span></div>
 </div>
 <script>
 const FPS = 30;
 const SCENE_FADE_FRAMES = 8;
 const SCENE_ID = 6;
-const SCENE_TOTAL = 8;
+const SCENE_TOTAL = 6;
 const SUBTITLES = [
   {
     "start": 0.0,
-    "end": 4.48,
-    "text": "传统方案学 AE 要几个月，本方案会写网页就行。"
+    "end": 3.93,
+    "text": "worm-html-2-video，开源免费。"
   },
   {
-    "start": 4.48,
-    "end": 7.69,
-    "text": "传统 3 天制作，本方案 3 分钟。"
-  },
-  {
-    "start": 7.69,
-    "end": 12.46,
-    "text": "AE 加 PR 加插件，不如 HTML 加 CLI。"
+    "start": 3.93,
+    "end": 6.65,
+    "text": "会写网页就行，快来试试吧！"
   }
 ];
 const subtitleBar = document.getElementById('subtitle-bar');
@@ -109,15 +121,17 @@ const totalFrames = Math.round(parseFloat(sceneEl.dataset.duration) * FPS);
 function easeOut(t) { return 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3); }
 function renderFrame(frame) {
   updateSubtitle(frame / FPS);
+  const localFrame = frame;
+  const total = totalFrames;
   let op = 1;
-  if (frame < SCENE_FADE_FRAMES) op = easeOut(frame / SCENE_FADE_FRAMES);
-  else if (frame > totalFrames - SCENE_FADE_FRAMES) op = easeOut((totalFrames - frame) / SCENE_FADE_FRAMES);
+  if (localFrame < SCENE_FADE_FRAMES) op = easeOut(localFrame / SCENE_FADE_FRAMES);
+  else if (localFrame > total - SCENE_FADE_FRAMES) op = easeOut((total - localFrame) / SCENE_FADE_FRAMES);
   sceneEl.style.opacity = op;
   sceneEl.querySelectorAll('.anim').forEach(an => {
     const dly = Math.round(parseFloat(an.dataset.delay) * FPS);
     const du = Math.round(parseFloat(an.dataset.dur) * FPS);
-    if (frame < dly) { an.style.opacity = '0'; an.style.transform = 'translateY(30px)'; }
-    else if (frame < dly + du) { const p = (frame - dly) / du; const e = easeOut(p); an.style.opacity = e; an.style.transform = 'translateY(' + (30*(1-e)) + 'px)'; }
+    if (localFrame < dly) { an.style.opacity = '0'; an.style.transform = 'translateY(30px)'; }
+    else if (localFrame < dly + du) { const p = (localFrame - dly) / du; const e = easeOut(p); an.style.opacity = e; an.style.transform = 'translateY(' + (30*(1-e)) + 'px)'; }
     else { an.style.opacity = '1'; an.style.transform = 'translateY(0)'; }
   });
 }
@@ -137,7 +151,7 @@ const vo = document.getElementById('vo');
 function playPreview() {
   if (_playing) { clearInterval(_iv); _playing = false; vo.pause(); return; }
   _playing = true; _f = 0;
-  vo.currentTime = 0; vo.play().catch(function(){});
+  vo.currentTime = 0; vo.play().catch(function() {});
   _iv = setInterval(function () { _f = _f + 1; if (_f >= totalFrames) { clearInterval(_iv); _playing = false; gotoScene(1); return; } renderFrame(_f); }, 1000 / FPS);
 }
 document.addEventListener('keydown', (e) => {
