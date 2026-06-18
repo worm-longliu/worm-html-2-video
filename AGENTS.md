@@ -66,3 +66,9 @@ Project-local Codex skills live under `.agent/skills/`. Read the matching `SKILL
 | Reviewing a non-trivial change or running `/discuss` | `.agent/skills/architecture-review/SKILL.md` |
 
 > The `skill/` directory at the repo root is a **user-facing** Codex skill (teaches AI agents how to *use* the tool). It is separate from the developer-facing `.agent/skills/` system above.
+
+
+## 会话规则
+
+- **禁止输出图片** — 会话过程中不得以任何形式输出或展示图片（包括 Markdown 图片语法、本地图片路径、内联图像、图片链接等）。
+- **回复必须使用中文** — 所有面向用户的回复（包括进度更新、最终结果、说明、提问）都必须使用中文。
