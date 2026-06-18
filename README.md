@@ -62,6 +62,16 @@ node bin/cli.js install-skill
 
 AI 助手会按“脚本 → HTML → 配音 → 时长同步 → 截图 → 合成”流程自动推进，每步可人工审核调整。
 
+**制作精美场景**：`script html` 生成的只是可读骨架，要做出精美效果需在审核 HTML 步骤时手动精修。AI 助手会遵循 [精美网页制作指导](./docs/visual-design.md)，运用以下进阶技法：
+
+- **设计系统基底** — `:root` CSS 变量色板（强调色给三档主/bright/deep）+ Google 字体 @import（Bricolage Grotesque 展示标题 / Noto Sans SC 中文 / JetBrains Mono 等宽）+ 径向渐变背景（非纯色）
+- **三层氛围装饰** — `bg-noise` 噪点纹理（opacity 0.04-0.06 消除塑料感）+ `glow` 光晕球（`blur(100px)`、部分溢出边缘、一冷一暖对角）+ `glass` 玻璃态（`backdrop-filter: blur()` 透出底层光晕）
+- **排版层次** — eyebrow 眉标（大字间距胶囊）+ 大字 hero（渐变文字 `background-clip:text`）+ `.hl` 局部高亮 + 等宽脚注
+- **几何 mark** — 旋转环 + 立体球体（`radial-gradient` + `inset box-shadow` 模拟 3D 光照），用单个 `.anim` 容器包裹
+- **逐场景配色** — 红(痛点)→青(方案)→紫(引擎)→琥珀(流程)→绿(CTA) 情绪递进，文字主色仍 `#FFFFFF` 保对比度
+
+> 精美可自由发挥，但 `window.__hyperframes` API、`<script>` 块、`.scene` 的 `data-duration`、`.anim` 的 `data-delay`/`data-dur` 必须原样保留，否则渲染崩溃。详见 [docs/visual-design.md](./docs/visual-design.md) 与基础可读规范 [docs/css-standards.md](./docs/css-standards.md)。
+
 ### 环境要求与自动安装(失败3次后手工兜底)
 
 本工具不打包 FFmpeg / edge-tts / Chromium,以下依赖需全局可用后方可运行。
@@ -241,7 +251,8 @@ Playwright 逐帧调用 `gotoFrame()` 截图，实现精确的动画捕获。
 
 | 文件 | 内容 |
 |------|------|
-| [docs/css-standards.md](./docs/css-standards.md) | 颜色系统、字体、间距、动画规范 |
+| [docs/css-standards.md](./docs/css-standards.md) | 颜色系统、字体、间距、动画规范（基础可读性） |
+| [docs/visual-design.md](./docs/visual-design.md) | 精美网页制作指导（CSS 变量、字体、氛围层、几何 mark、配色） |
 | [docs/video-copywriting.md](./docs/video-copywriting.md) | 配音文案创作、字幕规范、标题模板 |
 | [docs/video-generation.md](./docs/video-generation.md) | Playwright + FFmpeg 完整技术流程 |
 
