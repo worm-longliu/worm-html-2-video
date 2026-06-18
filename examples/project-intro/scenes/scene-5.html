@@ -59,7 +59,7 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 <div class="bg-noise"></div>
 <div id="subtitle-bar" class="subtitle-bar"></div>
 <audio id="vo" src="voiceover_scene_5.mp3" preload="auto"></audio>
-<div id="scene-5" class="scene" data-duration="10.752">
+<div id="scene-5" class="scene" data-duration="10.8">
   <div class="anim eyebrow" data-delay="0" data-dur="0.5">FEATURES</div>
   <div class="anim s5-title" data-delay="0.4" data-dur="0.6"><em>四大</em>核心特性</div>
   <div class="grid">
@@ -95,9 +95,21 @@ const SCENE_FADE_FRAMES = 8;
 const SCENE_ID = 5;
 const SCENE_TOTAL = 8;
 const SUBTITLES = [
-  { "start": 0.3, "end": 3.8, "text": "字幕精准对齐" },
-  { "start": 3.8, "end": 7.0, "text": "语速算法自动计算时间轴" },
-  { "start": 7.0, "end": 10.5, "text": "一套 HTML 适配四大平台" }
+  {
+    "start": 0.0,
+    "end": 4.0,
+    "text": "字幕精准对齐，语速算法自动计算时间轴。"
+  },
+  {
+    "start": 4.0,
+    "end": 7.59,
+    "text": "深色主题规范，四级颜色对比度系统。"
+  },
+  {
+    "start": 7.59,
+    "end": 10.75,
+    "text": "一套 HTML 适配四大平台。"
+  }
 ];
 const subtitleBar = document.getElementById('subtitle-bar');
 let _lastSub = null;

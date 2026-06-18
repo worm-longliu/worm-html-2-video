@@ -8,7 +8,7 @@
 
 - **前端友好** — 会写网页就能做视频，无需学习 AE/PR
 - **2分钟出片** — 全自动化流水线：截图→配音→字幕→合成
-- **精准字幕** — 语速算法计算时间轴，智能断行，场景边界对齐
+- **精准字幕** — 按句真实时长对齐，字幕文本=配音原文，场景边界对齐
 - **深色主题** — 四级颜色对比度系统，WCAG AA 标准
 - **多平台适配** — 抖音/视频号/B站/小红书，一次制作多端分发
 - **免费配音** — Edge-TTS 中文男声，自然流畅
@@ -21,7 +21,7 @@
 ```
 
 核心变化：`script.json` 是唯一权威数据源（场景规划+字幕+配音文案，不含时间），
-时长由配音反推——`voiceover.py` 按场景合成并测量真实时长，`sync_html.py`
+时长由配音反推——`voiceover.py` 按场景合成、测量真实时长并按句拆分得到每句起止（segments），`sync_html.py`
 据此自动更新 `scenes/` 各场景 HTML 的 `data-duration` 与局部 `SUBTITLES` 时间轴。
 
 ### 获取项目
@@ -195,7 +195,7 @@ worm-html-2-video/
 │   └── cli.js                    # CLI 入口（npx worm-html-2-video）
 ├── lib/                          # 核心工具脚本
 │   ├── script_tool.py           # 脚本校验/派生(voiceover_text.txt,script.md)/生成HTML骨架
-│   ├── voiceover.py             # 按场景配音+测量时长 → voiceover.mp3 + scene_timings.json
+│   ├── voiceover.py             # 按场景配音+测量时长+按句拆分(segments) → voiceover.mp3 + scene_timings.json
 │   ├── sync_html.py             # 据配音时长调整 scenes/ 各场景 HTML(data-duration + 局部 SUBTITLES)
 │   ├── capture.mjs              # Playwright 截图（通用版）
 │   └── generate_video.py        # 合成配音→video_final.mp4（复用已有voiceover.mp3）
@@ -275,7 +275,7 @@ Playwright 逐帧调用 `gotoFrame()` 截图，实现精确的动画捕获。
 
 - 字幕条在 HTML 中预留位置，截图时随帧一起捕获
 - 无需 SRT/ASS 生成和 ffmpeg 烧录
-- 生成方式：`npx worm-html-2-video script html` 写入初始 SUBTITLES，`npx worm-html-2-video sync` 据配音时长重算 start/end（场景首尾各留 0.3s）
+- 生成方式：`npx worm-html-2-video script html` 写入初始 SUBTITLES，`npx worm-html-2-video sync` 据配音时长重算 start/end；字幕按句拆分对齐——文本=配音原文，时间=该句真实起止（来自 `scene_timings.json` 的 `segments`），无 segments 时回退到首尾各留 0.3s 的均分算法
 
 ### 安全区域（抖音）
 

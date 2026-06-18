@@ -64,7 +64,7 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 <div class="grid-bg"></div>
 <div id="subtitle-bar" class="subtitle-bar"></div>
 <audio id="vo" src="voiceover_scene_3.mp3" preload="auto"></audio>
-<div id="scene-3" class="scene" data-duration="11.112">
+<div id="scene-3" class="scene" data-duration="11.1">
   <div class="anim eyebrow" data-delay="0" data-dur="0.5">FRAME ENGINE</div>
   <div class="anim s3-title" data-delay="0.4" data-dur="0.6">帧驱动<em>动画系统</em></div>
   <div class="anim s3-sub" data-delay="1.0" data-dur="0.5">精确到每一帧 · 5 fps 采集 · 30 fps 输出</div>
@@ -90,10 +90,21 @@ const SCENE_FADE_FRAMES = 8;
 const SCENE_ID = 3;
 const SCENE_TOTAL = 8;
 const SUBTITLES = [
-  { "start": 0.3, "end": 3.2, "text": "帧驱动动画系统" },
-  { "start": 3.2, "end": 6.0, "text": "精确到每一帧" },
-  { "start": 6.0, "end": 8.8, "text": "5 fps 采集，30 fps 输出" },
-  { "start": 8.8, "end": 11.0, "text": "HTML → PNG → MP4 编码" }
+  {
+    "start": 0.0,
+    "end": 3.21,
+    "text": "帧驱动动画系统，精确到每一帧。"
+  },
+  {
+    "start": 3.21,
+    "end": 6.62,
+    "text": "5 fps 采集，30 fps 输出。"
+  },
+  {
+    "start": 6.62,
+    "end": 11.11,
+    "text": "HTML 渲染到 PNG 截图再到 MP4 编码。"
+  }
 ];
 const subtitleBar = document.getElementById('subtitle-bar');
 let _lastSub = null;

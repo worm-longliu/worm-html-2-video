@@ -2,11 +2,7 @@
 
 ## 脚本驱动工作流（每步可人工审核）
 
-> **Gitee 用户注意**：Gitee 未托管 npm 包，`npx worm-html-2-video` 不可用。
-> 请 `git clone` 项目后，用 `node bin/cli.js` 替代所有 `npx worm-html-2-video` 命令。
-> 例如：`node bin/cli.js init` 代替 `npx worm-html-2-video init`。
-
-`
+```
 1. 编写脚本 → script.json（场景规划+字幕+配音文案，不含时间）        ★人工审核
    npx worm-html-2-video init  然后 编辑 script.json
    可派生: npx worm-html-2-video script doc  → script.md（分镜脚本，便于审核）
@@ -21,23 +17,26 @@
 
 4. 据配音时长自动调整 scenes/ 各场景 HTML（data-duration + 局部 SUBTITLES 时间轴）
    npx worm-html-2-video sync
-   （读取 scene_timings.json，把每个场景显示时长设为该场景配音时长）
+   （读取 scene_timings.json，把每个场景显示时长设为该场景配音时长；
+    字幕按句拆分对齐——文本=配音原文，时间=该句真实起止，见 scene_timings.json 的 segments）
 
 5. 截图 → video_html.mp4
    npx worm-html-2-video capture  （Playwright 逐帧截图，字幕随帧捕获）
 
 6. 合成视频 → video_final.mp4
    npx worm-html-2-video generate  （复用已有 voiceover.mp3 合并）
-`
+```
 
 核心：时长不再人工估算。script.json 不含时间，voiceover.py 测出每场景
-真实配音时长，sync_html.py 据此回填 scenes/ 各场景 HTML，保证音画精确对齐。
+真实配音时长并按句拆分得到每句真实起止（segments），sync_html.py 据此回填 scenes/
+各场景 HTML 的 data-duration 与 SUBTITLES（字幕文本=配音原文、时间=该句真实起止），
+保证音画与字音精确对齐。
 
 ---
 
 ## 完整工具链
 
-`
+```
 script.json（场景+字幕+配音文案）
     ↓ script_tool.py html
 scenes/（每场景一个 HTML，字幕条+SUBTITLES占位+data-duration初值）
@@ -49,7 +48,7 @@ scenes/（各场景时长已对齐配音）
 frames/ + video_html.mp4
     ↓ generate_video.py（复用 voiceover.mp3 合并，无字幕烧录）
 video_final.mp4
-`
+```
 
 ---
 ## 1. Playwright 截图（capture.mjs）
@@ -78,7 +77,7 @@ const OUTPUT_FPS = 30;   // HTML动画原始帧率
 const FRAME_INTERVAL = Math.round(OUTPUT_FPS / CAPTURE_FPS);  // 每6帧采集1帧
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const htmlFile = path.join(__dirname, 'video.html');
+const htmlFile = path.join(__dirname, 'scenes', 'scene-1.html');  // 多文件:遍历 scene-N.html
 const outputDir = path.join(__dirname, 'frames');
 
 // ===== 准备输出目录（不要自动清理！） =====
@@ -151,48 +150,29 @@ pip install edge-tts
 | 语速 | `+10%` | 稍快，适合技术内容 |
 | 音量 | `+0%` | 正常 |
 
-### 带时间戳的配音生成
+### 按句拆分的配音时间轴
 
-```python
-import edge_tts
-import asyncio
-import json
+> Edge-TTS 的 `WordBoundary` 事件对中文不可靠（实测返回 0 个事件），
+> 无法用于词级字幕对齐。本项目改用「按句拆分」获取真实时间轴。
 
-TTS_VOICE = "zh-CN-YunxiNeural"
-TTS_RATE = "+10%"
+`lib/voiceover.py` 的做法（已实现在 `generate_voiceover` 中）：
 
-async def generate_voiceover_with_timing(text, output_audio, output_timing=None):
-    """生成配音并导出词级时间戳（用于精准字幕对齐）"""
-    communicate = edge_tts.Communicate(text, TTS_VOICE, rate=TTS_RATE)
-    
-    word_timings = []
-    
-    async for chunk in communicate.stream():
-        if chunk["type"] == "audio":
-            # 音频数据
-            pass
-        elif chunk["type"] == "WordBoundary":
-            word_timings.append({
-                "text": chunk["text"],
-                "offset": chunk["offset"] / 10_000_000,  # 转为秒
-                "duration": chunk["duration"] / 10_000_000
-            })
-    
-    # 保存音频
-    await communicate.save(output_audio)
-    
-    # 保存时间戳（可选，用于精准字幕）
-    if output_timing:
-        with open(output_timing, 'w', encoding='utf-8') as f:
-            json.dump(word_timings, f, ensure_ascii=False, indent=2)
-    
-    return word_timings
+1. 对整段 `voiceover` 文本按句末标点（`。！？`）拆成句子；
+2. 每句单独合成并用 `ffprobe` 测真实时长；
+3. 把各句时长按比例缩放到该场景整段配音时长（消除单句合成的首尾静音偏差）；
+4. 累加得到每句在该场景内的局部起止，写入 `scene_timings.json` 的 `segments`：
 
-# 使用
-asyncio.run(generate_voiceover_with_timing(
-    full_text, "voiceover.mp3", "word_timings.json"
-))
+```json
+{
+  "segments": [
+    {"text": "传统做法：学 AE 学 PR，装软件就半天。", "start": 0.0, "end": 4.59},
+    {"text": "一个 60 秒视频做三天。", "start": 4.59, "end": 7.23}
+  ]
+}
 ```
+
+`lib/sync_html.py` 读取 `segments` 生成 `SUBTITLES`：字幕文本=配音原文，
+时间=该句真实起止，从源头保证「字音一致、节奏对齐」。
 
 ### 音画同步三原则
 
@@ -220,7 +200,7 @@ print(f"配音时长: {duration:.2f}s")
 
 ## 3. 字幕生成（内嵌于 HTML，无 SRT/ASS）
 
-字幕不再单独生成 SRT/ASS 文件,而是直接写入 `video.html` 的 `SUBTITLES` 数组。
+字幕不再单独生成 SRT/ASS 文件,而是直接写入各 `scenes/scene-N.html` 的 `SUBTITLES` 数组。
 HTML 中预留字幕条 DOM,渲染循环按当前时间切换文本,截图时随帧捕获。
 
 ### 3.1 HTML 字幕条结构
@@ -291,87 +271,17 @@ function renderFrame(frame) {
 }
 ```
 
-### 3.3 时间轴算法 (与原 SRT 模式一致)
+### 3.3 字幕时间轴（按句真实对齐，由 sync 自动生成）
 
-```
-场景留白:  首尾各 0.3s
-语速:      每秒 4.5 个中文字
-最短显示:  1.5s
-最长显示:  5.0s
-字幕间隔:  ≥ 0.2s
-换行:      文本内使用 \n,每行 ≤ 20 字符
-```
+字幕不再需要手动导出或估算。`npx worm-html-2-video sync` 读取
+`scene_timings.json` 的 `segments` 自动生成 `SUBTITLES`：
 
-### 3.4 自动从 voiceover_text.txt 导出 SUBTITLES
+- **文本** = 配音按句拆分的原文（字音完全一致，无需手动同步）
+- **时间** = 该句在场景内的真实起止（由每句单独合成测得，见上方「按句拆分的配音时间轴」）
+- 无 `segments` 时回退均分算法：场景首尾各留 0.3s、按行均分、单条 1.5–5.0s、句间 ≥0.2s
 
-```bash
-python lib/generate_video.py --export-subtitles subtitles.js
-# 输出的 JS 片段直接复制到 video.html 的 SUBTITLES 数组位置
-```
-
-底层逻辑 (Python):
-
-```python
-import re
-import json
-
-CHARS_PER_SECOND = 4.5
-SCENE_GAP = 0.3
-MIN_DURATION = 1.5
-MAX_DURATION = 5.0
-
-def parse_voiceover_segments(path):
-    """解析 [场景N: Xs-Ys] 标记,返回 [{scene, start, end, text}]"""
-    with open(path, "r", encoding="utf-8") as f:
-        content = f.read()
-    pattern = r"\[(?:场景|Scene)\s*(\d+):\s*(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)s?\]"
-    parts = re.split(pattern, content)
-    out = []
-    i = 1
-    while i < len(parts):
-        out.append({
-            "scene": int(parts[i]),
-            "start": float(parts[i+1]),
-            "end": float(parts[i+2]),
-            "text": parts[i+3].strip() if i+3 < len(parts) else "",
-        })
-        i += 4
-    return out
-
-def compute_subtitle_segments(segments):
-    """按语速+场景边界计算每条字幕的 {start, end, text}"""
-    subtitles = []
-    for seg in segments:
-        s = seg["start"] + SCENE_GAP
-        e = seg["end"] - SCENE_GAP
-        if e <= s:
-            continue
-        sentences = [x.strip() for x in re.split(r"[。！？]", seg["text"]) if x.strip()]
-        if not sentences:
-            continue
-        char_counts = [len(x) for x in sentences]
-        total = sum(char_counts)
-        cur = s
-        for i, sent in enumerate(sentences):
-            prop = char_counts[i] / total if total else 1
-            dur = max(MIN_DURATION, min(prop * (e - s), MAX_DURATION))
-            start = cur
-            end = min(cur + dur, e)
-            subtitles.append({"start": start, "end": end, "text": sent})
-            cur = end + 0.2
-    return subtitles
-
-def format_subtitle_js(subtitles):
-    """渲染 SUBTITLES = [...] JS 数组字面量"""
-    lines = ["const SUBTITLES = ["]
-    for sub in subtitles:
-        text = json.dumps(sub["text"], ensure_ascii=False)
-        lines.append(
-            f"  {{ start: {sub['start']:.2f}, end: {sub['end']:.2f}, text: {text} }},"
-        )
-    lines.append("];")
-    return "\n".join(lines) + "\n"
-```
+> 旧版字幕导出命令（`--export-subtitles`，语速 4.5 字/秒估算）已从代码中移除——
+> 它无法保证字音一致与节奏对齐，新流程用 `sync` + `segments` 替代。
 
 ### 3.5 字幕样式微调
 
@@ -546,7 +456,7 @@ if __name__ == '__main__':
 
 ---
 
-## 5. 字幕位置与样式（在 video.html 中调整）
+## 5. 字幕位置与样式（在各 scene-N.html 中调整）
 
 字幕样式直接通过 CSS 控制,无需 ffmpeg `force_style`。
 
@@ -725,10 +635,10 @@ def verify_output(video_path, expected_duration=None):
 
 ### Q: 字幕时间对不上画面？
 
-**A:** 字幕已内嵌 HTML,在 `SUBTITLES` 数组中调整 `start` / `end` 即可。关键要点：
-- 每个场景首尾留 0.3s 间隔（与配音同步）
-- 配音未播完不要切场景
-- 用 `python lib/generate_video.py --export-subtitles subtitles.js` 自动从 `voiceover_text.txt` 生成
+**A:** 字幕由 `npx worm-html-2-video sync` 根据 `scene_timings.json` 的 `segments` 自动生成
+（文本=配音原文、时间=该句真实起止）。若仍不对：
+- 确认已按顺序跑 `voiceover` → `sync`（segments 由 voiceover 生成、由 sync 写入 HTML）
+- 字幕文本与配音不符时，改 `script.json` 的 `voiceover` 后重跑 `voiceover` + `sync`
 - 重新跑 `node lib/capture.mjs` 让更新生效
 
 ### Q: 字幕条被抖音操作栏遮挡？
@@ -744,7 +654,7 @@ def verify_output(video_path, expected_duration=None):
 
 ### Q: 想保留 SRT 文件（B站上传用）？
 
-**A:** 新方案默认不生成 SRT。可在 `video.html` 中保留 SUBTITLES 数组 + 临时启用旧 `generate_subtitles()` 函数生成 SRT;或用第三方工具把 SUBTITLES 数组转 SRT。
+**A:** 新方案默认不生成 SRT。可在各 `scenes/scene-N.html` 中保留 SUBTITLES 数组 + 临时启用旧 `generate_subtitles()` 函数生成 SRT;或用第三方工具把 SUBTITLES 数组转 SRT。
 
 ### Q: frames 目录为空？
 

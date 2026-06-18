@@ -15,7 +15,7 @@ metadata:
 
 ## 渲染视角（lib/capture.mjs + Playwright）
 
-1. **帧 API 契约** — 是否改动 `window.__hyperframes` 的接口形状（`getTotalFrames` / `getSceneCount` / `getSceneDuration` / `gotoFrame`）？`templates/` 与 `examples/*.html` 是否同步更新？
+1. **帧 API 契约** — 是否改动 `window.__hyperframes` 的接口形状（`getTotalFrames` / `getSceneCount` / `getSceneDuration` / `gotoFrame`）？`scenes/scene-N.html` 与 `examples/*.html` 是否同步更新？
 2. **采样率一致性** — 5 fps 采集 + 30 fps 输出配比是否在改动后仍成立？`-vf fps=30` 插帧是否丢失原意？
 3. **浏览器资源** — Chromium headless 启动参数（`--no-sandbox` / `--disable-gpu`）是否在 CI 容器（root 用户、Linux）仍然可用？
 4. **帧目录管理** — `frames/` 是否会被新逻辑误清空？`generate_video.py` 复用 `frames/`，**禁止 capture 阶段隐式清理** `frames/` 之外的副作用
@@ -27,7 +27,7 @@ metadata:
 
 1. **编码兼容性** — 输出 H.264 + AAC + `yuv420p` 三件套是否保留？抖音 / TikTok / B 站兼容性靠这个
 2. **Windows GBK 处理** — `sys.stdout.reconfigure(encoding=''utf-8'', errors=''replace'')` 头部是否还在？**禁止删除**（会吞掉 edge-tts 异常）
-3. **字幕方案** — 字幕内嵌 `video.html` 的 `SUBTITLES` 数组，截图时随帧捕获，**无 SRT/ASS 烧录**。旧 `burn_subtitles`/force_style 逻辑已废弃
+3. **字幕方案** — 字幕内嵌各 `scenes/scene-N.html` 的 `SUBTITLES` 数组，截图时随帧捕获，**无 SRT/ASS 烧录**。旧 `burn_subtitles`/force_style 逻辑已废弃
 4. **时长测量** — `voiceover.py` 是否用 ffprobe 测每段真实时长（WordBoundary 不可靠，会返回 0）？`scene_timings.json` 的 duration 是否与 `ffprobe voiceover.mp3` 一致？
 5. **拼接准确性** — 多段 mp3 是否用 ffmpeg concat demuxer 拼接（字节拼接会导致时长异常）？
 6. **时序对齐** — `sync_html.py` 写入的 `data-duration` 总和是否 ≥ `scene_timings.json` 的 `total_duration`？末场景是否加了 tail buffer？
@@ -43,7 +43,7 @@ metadata:
 5. **参数透传** — `process.argv.slice(3).join('' '')` 直接拼到 shell 字符串，参数含空格 / 特殊字符（路径、voice 名带空格）是否会被误解析？考虑改用 `spawn` 数组参数
 6. **Node 版本约束** — 是否仅依赖 Node 18+ ESM 特性（`import.meta.url`、`fileURLToPath`）？
 
-## HTML 模板与安全区视角（templates/ + examples/*.html + 用户 video.html）
+## HTML 模板与安全区视角（scenes/scene-N.html + examples/*.html + 用户场景 HTML）
 
 1. **分辨率与 viewport** — 是否仍是 1080×1929？… 实际是 1080×1920。`overflow: hidden` 是否保留？改了是否影响所有平台安全区？
 2. **安全区合规** — 顶部 180px / 底部 300px 是否仍是禁区？关键内容（标题）Y 坐标 200–1600 范围内？
@@ -56,10 +56,10 @@ metadata:
 
 ## 跨视角通用项
 
-1. **固定制品名** — 任何对 `script.json` / `video.html` / `voiceover_text.txt` / `voiceover.mp3` / `scene_timings.json` / `video_html.mp4` / `video_final.mp4` / `frames/` 命名的改动都是**破坏性变更**，需在 PR 描述中显式声明（`subtitle.srt`/`subtitle.ass` 为废弃产物）
-2. **examples 同步** — 改动 `templates/` 是否同步更新 `examples/minimal` / `full-demo` / `skill-intro` / `project-intro`？至少 `minimal` 必须重跑回归
+1. **固定制品名** — 任何对 `script.json` / `scenes/` / `voiceover_text.txt` / `voiceover.mp3` / `scene_timings.json` / `video_html.mp4` / `video_final.mp4` / `frames/` 命名的改动都是**破坏性变更**，需在 PR 描述中显式声明（`subtitle.srt`/`subtitle.ass` 为废弃产物）
+2. **examples 同步** — 改动 `lib/script_tool.py` 生成的场景骨架是否同步更新 `examples/minimal` / `full-demo` / `skill-intro` / `project-intro`？至少 `minimal` 必须重跑回归
 3. **文档同步** — 改 `lib/*.mjs` 或 `lib/*.py` 是否同步更新 `docs/` + `skill/` 两份文档（这两份需保持内容一致）？
-4. **包发布清单** — `package.json` 的 `files` 字段是否仍含 `bin/` `lib/` `templates/` `docs/` `skill/` `README.md` `LICENSE`？新增目录是否需要加入？
+4. **包发布清单** — `package.json` 的 `files` 字段是否仍含 `bin/` `lib/` `README.md` `LICENSE`？新增目录是否需要加入？
 5. **.gitignore / .npmignore** — 新增生成制品是否加入忽略列表？`scene_timings.json`/`*.mp3`/`*.mp4`/`frames/` 已忽略；`script.json`/`script.md`/`voiceover_text.txt` 是源/派生文件需保留
 
 ## 不属于评审范围

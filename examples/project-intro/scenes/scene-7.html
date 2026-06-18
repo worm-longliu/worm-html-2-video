@@ -59,7 +59,7 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 <div class="bg-noise"></div>
 <div id="subtitle-bar" class="subtitle-bar"></div>
 <audio id="vo" src="voiceover_scene_7.mp3" preload="auto"></audio>
-<div id="scene-7" class="scene" data-duration="9.816">
+<div id="scene-7" class="scene" data-duration="9.8">
   <div class="anim eyebrow" data-delay="0" data-dur="0.5">TECH HIGHLIGHTS</div>
   <div class="anim s7-title" data-delay="0.4" data-dur="0.6">技术<em>亮点</em></div>
   <div class="stats">
@@ -80,9 +80,16 @@ const SCENE_FADE_FRAMES = 8;
 const SCENE_ID = 7;
 const SCENE_TOTAL = 8;
 const SUBTITLES = [
-  { "start": 0.3, "end": 3.6, "text": "5 fps 轻量帧采样" },
-  { "start": 3.6, "end": 6.8, "text": "30 fps 流畅视频输出" },
-  { "start": 6.8, "end": 9.6, "text": "多平台适配一次制作多端分发" }
+  {
+    "start": 0.0,
+    "end": 4.71,
+    "text": "5 fps 轻量帧采样，30 fps 流畅视频输出。"
+  },
+  {
+    "start": 4.71,
+    "end": 9.82,
+    "text": "智能换行不拆英文单词，多平台适配一次制作多端分发。"
+  }
 ];
 const subtitleBar = document.getElementById('subtitle-bar');
 let _lastSub = null;

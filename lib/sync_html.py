@@ -3,7 +3,7 @@
 worm-html-2-video HTML 时长同步工具
 
 读取 scene_timings.json(由 lib/voiceover.py 生成)和 script.json,
-更新 video.html 中每个 .scene 的 data-duration 以及 SUBTITLES 数组的
+更新 scenes/scene-N.html 中每个 .scene 的 data-duration 以及 SUBTITLES 数组的
 start/end 时间轴,使视频时长与真实配音时长精确对齐。
 
 这是新工作流的第 4 步:在配音生成后,把每个场景的显示时长调整为该场景
@@ -81,12 +81,24 @@ def compute_durations(timings, tail_buffer):
     # guard against zero durations
     durs = [max(0.5, d) for d in durs]
     return durs
-def compute_scene_subtitles(scene, dur):
+def compute_scene_subtitles(scene, dur, timing_scene=None):
     """Build SUBTITLES entries for ONE scene on a LOCAL 0-based timeline.
 
-    The subtitle window is [SCENE_GAP, dur - SCENE_GAP]. Multi-line
-    subtitles (split by newline) are time-shared evenly within the window.
+    When timing_scene carries per-sentence "segments" (measured by
+    lib/voiceover.py), use them directly so subtitle text equals the spoken
+    sentence and timing follows the real narration rhythm. Otherwise fall back
+    to even time-sharing of the subtitle field within [SCENE_GAP, dur - SCENE_GAP].
     """
+    if timing_scene and timing_scene.get("segments"):
+        entries = []
+        for seg in timing_scene["segments"]:
+            s = max(0.0, float(seg["start"]))
+            e = min(dur, float(seg["end"]))
+            if e <= s:
+                e = s + 0.1
+            entries.append({"start": round(s, 2), "end": round(e, 2),
+                            "text": str(seg["text"])})
+        return entries
     start = SCENE_GAP
     end = dur - SCENE_GAP
     if end <= start:
@@ -156,7 +168,7 @@ def replace_subtitles(html, subtitles):
     replacement = r'\g<1>' + subs_js + r'\g<2>'
     new_html, n = SUBTITLES_RE.subn(replacement, html)
     if n == 0:
-        print("⚠️  SUBTITLES array not found in video.html; skipping subtitle sync")
+        print("⚠️  SUBTITLES array not found in scene HTML; skipping subtitle sync")
         return html, 0
     return new_html, n
 
@@ -200,7 +212,8 @@ def main():
             html = f.read()
         html, n = replace_scene_durations(html, [dur])
         scene_obj = script_scenes[idx] if idx < len(script_scenes) else {}
-        subs = compute_scene_subtitles(scene_obj, dur)
+        timing_obj = timings["scenes"][idx] if idx < len(timings["scenes"]) else {}
+        subs = compute_scene_subtitles(scene_obj, dur, timing_obj)
         html, n_subs = replace_subtitles(html, subs)
         with open(path, "w", encoding="utf-8") as f:
             f.write(html)

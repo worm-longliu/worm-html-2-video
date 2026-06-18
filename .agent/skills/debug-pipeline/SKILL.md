@@ -34,7 +34,7 @@ metadata:
 | 1. 脚本 | `npx worm-html-2-video script validate` | 校验 `script.json` 结构 |
 | 2. HTML | 浏览器预览（空格播放、方向键逐帧、数字键跳场景） | `python -m http.server` 后手播 |
 | 3. 配音 | `npx worm-html-2-video voiceover` | `ffprobe voiceover.mp3` 看时长；查 `scene_timings.json` 每场景时长 |
-| 4. 调时 | `npx worm-html-2-video sync` | 查 `video.html` 的 `data-duration` 是否 = `scene_timings.json` |
+| 4. 调时 | `npx worm-html-2-video sync` | 查 `scenes/scene-N.html` 的 `data-duration` 是否 = `scene_timings.json` |
 | 5. 截图 | `npx worm-html-2-video capture` | `ffprobe video_html.mp4` 看时长 |
 | 6. 合成 | `npx worm-html-2-video generate` | 查 stderr / `video_final.mp4` |
 | 7. 复核 | `ffprobe video_final.mp4` | 音轨 + 字幕 + 时长 + 分辨率 |
@@ -54,7 +54,7 @@ metadata:
 
 ### 阶段 3：修复与回归
 - 改一处 → 跑对应单步 → 再跑 `examples/minimal` 全链路
-- 修复时同步检查：固定制品名（`video.html` / `voiceover.mp3` / `frames/`）是否被改动
+- 修复时同步检查：固定制品名（`scenes/` / `voiceover.mp3` / `frames/`）是否被改动
 
 ## 本项目常见踩坑速查
 
@@ -119,5 +119,5 @@ metadata:
 - [ ] 修复后 `examples/minimal` 端到端通过
 - [ ] 失败信息已贴原始输出（ffmpeg stderr / Playwright trace / edge-tts stack）
 - [ ] 修复未引入新的 `data-duration` 不对齐
-- [ ] 制品名（`video.html` 等）未变
+- [ ] 制品名（`scenes/` 等）未变
 - [ ] 跨平台（Windows）路径转义问题未回归

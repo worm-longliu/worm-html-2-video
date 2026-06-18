@@ -2,15 +2,11 @@
 
 ## 配音文案格式（voiceover_text.txt）
 
-> **Gitee 用户注意**：Gitee 未托管 npm 包，`npx worm-html-2-video` 不可用。
-> 请 `git clone` 项目后，用 `node bin/cli.js` 替代所有 `npx worm-html-2-video` 命令。
-> 例如：`node bin/cli.js init` 代替 `npx worm-html-2-video init`。
->
 > **脚本驱动流程说明**：`voiceover_text.txt` 现在是 `script.json` 的派生物
 > （由 `npx worm-html-2-video script vo` 生成），其中的时间标记为估算值，
 > 仅供人工阅读。权威数据源是 `script.json` 的 `voiceover` / `subtitle` 字段；
 > 每个场景的真实时长由 `npx worm-html-2-video voiceover` 测量并写入 `scene_timings.json`，
-> 再由 `npx worm-html-2-video sync` 回填到 `video.html` 的 `data-duration`。
+> 再由 `npx worm-html-2-video sync` 回填到各 `scenes/scene-N.html` 的 `data-duration`。
 > 因此文案创作时**无需精确估算时间**，只需控制字数与语速匹配即可。
 
 ### 标准格式
@@ -45,7 +41,7 @@ Agent 开发卡住不干活也不知道，半天的时间就浪费了。
 ```
 script.json: {"voiceover": "..."}        ← 只写文案，不写时间
 voiceover.py → scene_timings.json: {"duration": 6.2}  ← 真实配音时长
-sync_html.py → video.html: data-duration="6.2"        ← 据时长回填
+sync_html.py → scenes/scene-N.html: data-duration="6.2"  ← 据时长回填
 ```
 
 **核心约束**：`data-duration` = 该场景配音真实时长（末场景加 tail buffer），
@@ -103,7 +99,7 @@ sync_html.py → video.html: data-duration="6.2"        ← 据时长回填
 
 ## 字幕规范（内嵌于 HTML）
 
-字幕不再单独生成 SRT 文件,而是直接写入 `video.html` 的 `SUBTITLES` 数组。
+字幕不再单独生成 SRT 文件,而是直接写入各 `scenes/scene-N.html` 的 `SUBTITLES` 数组。
 HTML 中预留字幕条 DOM,渲染循环按当前时间切换文本,截图时随帧捕获。
 
 ### SUBTITLES 数据格式
@@ -121,11 +117,15 @@ const SUBTITLES = [
 
 ### 字幕时间轴原则
 
+> 新机制（默认）：`voiceover.py` 按句拆分配音并测每句真实时长，写入
+> `scene_timings.json` 的 `segments`；`sync_html.py` 据此生成字幕——文本=配音
+> 原文，时间=该句真实起止。下方原则描述的是无 `segments` 时的回退算法。
+
 1. **场景首留白**: 字幕起始 = 场景开始 + 0.3s (等画面稳定)
 2. **场景尾留白**: 字幕结束 = 场景结束 - 0.3s (避免切换时残留)
 3. **句间间隔**: 两条字幕间隔 ≥ 0.2s (避免视觉混淆)
 4. **最短时长**: 单条字幕 ≥ 1.5s (确保读者看清)
-5. **最长时长**: 单条字幕 ≤ 5.0s (避免观众失去耐心)
+5. **最长时长**: 单条字幕 ≤ 5.0s (回退算法上限；segments 模式下随句子真实时长)
 
 ### 字幕换行规则
 
@@ -136,29 +136,21 @@ const SUBTITLES = [
 | 最多 2 行 | 超过则拆分为多条字幕 | — |
 | 英文不拆词 | 整词保持在同一行 | `Rust + Tauri v2` 不换行 |
 
-### 自动从 voiceover_text.txt 导出
-
-```bash
-python lib/generate_video.py --export-subtitles subtitles.js
-# 把输出的 JS 数组直接粘贴到 video.html 的 SUBTITLES 位置
-```
-
-底层算法 (与原 SRT 模式相同):
-- 语速 4.5 字/秒
-- 按句号/感叹号分割场景文案
-- 按字符数比例分配场景内时长
-- 最短 1.5s,最长 5.0s,句间 0.2s
-
 ### 字幕文本与配音文案的关系
 
 | 文件 | 内容 | 时间标记 | 用途 |
 |------|------|----------|------|
 | `voiceover_text.txt` | 配音文案 | `[场景N: Xs-Ys]` | TTS 输入 |
-| `video.html` SUBTITLES | 显示文本 | `{ start, end, text }` | 视频显示 |
+| `scenes/scene-N.html` SUBTITLES | 显示文本 | `{ start, end, text }` | 视频显示 |
 | `subtitle.srt` (旧) | 显示文本 | `HH:MM:SS,mmm` | 第三方平台上传 (可选) |
 
-理想情况下,`SUBTITLES[i].text` 与 `voiceover_text.txt` 中对应句完全一致。
-若配音算法改写文案 (如 "5fps" → "5 f p s"),需手动同步 `SUBTITLES` 文本。
+新机制下,`SUBTITLES[i].text` 与配音原文按句完全一致 (由 `segments` 直接生成,
+无需手动同步)。仅当采用回退算法 (无 `segments`) 时,才需人工保证字幕文本与配音一致。
+
+> **多音字提示**: Edge-TTS 纯文本无法可靠强制多音字读音 (如"一行"可能读
+> yixing)。`voiceover.py` 的 SSML `<phoneme>` 方案实测会令该场景时长异常暴增,
+> 不可用。规避方法:在 `script.json` 的 `voiceover` 中改用无多音字歧义的等价
+> 表述 (如"一行命令"→"一条命令")。
 
 ### 字幕条 CSS 速查
 
@@ -185,27 +177,23 @@ python lib/generate_video.py --export-subtitles subtitles.js
 }
 ```
 
-### 字幕与配音对齐验证 (Python)
+### 字幕与配音对齐验证
 
-```python
-def verify_subtitle_sync(subtitles, segments):
-    """验证字幕时间是否落在所属场景内"""
-    for sub in subtitles:
-        matched = False
-        for seg in segments:
-            if seg['start'] <= sub['start'] and sub['end'] <= seg['end'] + 0.5:
-                matched = True
-                break
-        if not matched:
-            print(f"⚠️ 字幕 '{sub['text'][:10]}...' 不在任何场景范围内")
-```
+新机制下字幕由 `segments` 直接生成，文本与时间天然一致，通常无需验证。若需排查，
+检查 `scene_timings.json` 中每场景的 `segments`：每条 `text` 应是 `voiceover` 的一个
+完整句子，`start`/`end` 应在该场景 `[0, duration]` 范围内连续无重叠。
 
-### 何时需要手动调字幕
+### 何时需要重跑 sync（而非手动调字幕）
 
-- 配音生成后,实际时长与预估偏差较大 (>0.5s)
-- 某些句 TTS 发音不清晰,需缩短单条字幕
-- 场景需要更舒缓的节奏,主动拉长字幕时长
-- 关键名词/数字需要加粗或颜色突出 (用 `<span style="color:#00ff88">` 包裹)
+字幕由 `sync` 自动生成，**不要手动改 `SUBTITLES`**（会被下次 sync 覆盖）。以下情况
+重跑 `voiceover` → `sync`：
+
+- 修改了 `script.json` 的 `voiceover`（字幕文本随配音原文变化）
+- 重新生成配音后时长变化（字幕时间随真实时长变化）
+- 想调整某句断句：在 `voiceover` 中用句末标点（`。！？`）控制拆分点
+
+> 关键名词/数字的颜色突出仍可在 `scene-N.html` 的字幕 DOM 外另行叠加样式，
+> 但 `SUBTITLES` 数组本身由 sync 维护。
 
 ---
 

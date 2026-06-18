@@ -63,7 +63,7 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 <div class="bg-noise"></div>
 <div id="subtitle-bar" class="subtitle-bar"></div>
 <audio id="vo" src="voiceover_scene_2.mp3" preload="auto"></audio>
-<div id="scene-2" class="scene" data-duration="11.664">
+<div id="scene-2" class="scene" data-duration="11.7">
   <div class="anim eyebrow" data-delay="0" data-dur="0.5">PAIN POINT</div>
   <div class="anim s2-title" data-delay="0.4" data-dur="0.6">传统做法 vs <em>本方案</em></div>
   <div class="s2-grid" style="position: relative;">
@@ -88,10 +88,21 @@ const SCENE_FADE_FRAMES = 8;
 const SCENE_ID = 2;
 const SCENE_TOTAL = 8;
 const SUBTITLES = [
-  { "start": 0.3, "end": 3.0, "text": "传统做法：学 AE 学 PR" },
-  { "start": 3.0, "end": 5.5, "text": "装软件就半天" },
-  { "start": 5.5, "end": 8.5, "text": "60 秒视频做三天" },
-  { "start": 8.5, "end": 11.4, "text": "本方案 HTML 加 CSS 动画\n分钟级出片" }
+  {
+    "start": 0.0,
+    "end": 4.59,
+    "text": "传统做法：学 AE 学 PR，装软件就半天。"
+  },
+  {
+    "start": 4.59,
+    "end": 7.23,
+    "text": "一个 60 秒视频做三天。"
+  },
+  {
+    "start": 7.23,
+    "end": 11.66,
+    "text": "本方案 HTML 加 CSS 动画，分钟级出片。"
+  }
 ];
 const subtitleBar = document.getElementById('subtitle-bar');
 let _lastSub = null;

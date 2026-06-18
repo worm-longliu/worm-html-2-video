@@ -55,7 +55,7 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 <div class="bg-noise"></div>
 <div id="subtitle-bar" class="subtitle-bar"></div>
 <audio id="vo" src="voiceover_scene_4.mp3" preload="auto"></audio>
-<div id="scene-4" class="scene" data-duration="11.472">
+<div id="scene-4" class="scene" data-duration="11.3">
   <div class="anim eyebrow" data-delay="0" data-dur="0.5">PIPELINE</div>
   <div class="anim s4-title" data-delay="0.4" data-dur="0.6">全程<em>六步</em>自动化</div>
   <div class="anim s4-sub" data-delay="0.9" data-dur="0.4">一行命令，从脚本到成片</div>
@@ -74,9 +74,16 @@ const SCENE_FADE_FRAMES = 8;
 const SCENE_ID = 4;
 const SCENE_TOTAL = 8;
 const SUBTITLES = [
-  { "start": 0.3, "end": 3.5, "text": "全程六步自动化" },
-  { "start": 3.5, "end": 7.0, "text": "编写脚本到合成视频" },
-  { "start": 7.0, "end": 11.2, "text": "一行命令全自动完成" }
+  {
+    "start": 0.0,
+    "end": 8.9,
+    "text": "全程六步自动化：编写脚本、生成 HTML、Edge-TTS 配音、同步时间轴、帧采集编码、合成输出。"
+  },
+  {
+    "start": 8.9,
+    "end": 11.33,
+    "text": "一条命令全自动完成。"
+  }
 ];
 const subtitleBar = document.getElementById('subtitle-bar');
 let _lastSub = null;

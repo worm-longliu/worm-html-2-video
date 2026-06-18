@@ -57,7 +57,7 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 <div class="bg-noise"></div>
 <div id="subtitle-bar" class="subtitle-bar"></div>
 <audio id="vo" src="voiceover_scene_6.mp3" preload="auto"></audio>
-<div id="scene-6" class="scene" data-duration="12.456">
+<div id="scene-6" class="scene" data-duration="12.5">
   <div class="anim eyebrow" data-delay="0" data-dur="0.5">COMPARISON</div>
   <div class="anim s6-title" data-delay="0.4" data-dur="0.6">效率对比</div>
   <div class="anim table" data-delay="0.9" data-dur="0.5">
@@ -78,10 +78,21 @@ const SCENE_FADE_FRAMES = 8;
 const SCENE_ID = 6;
 const SCENE_TOTAL = 8;
 const SUBTITLES = [
-  { "start": 0.3, "end": 4.0, "text": "传统方案学 AE 要几个月" },
-  { "start": 4.0, "end": 7.5, "text": "本方案会写网页就行" },
-  { "start": 7.5, "end": 10.5, "text": "传统 3 天 本方案 3 分钟" },
-  { "start": 10.5, "end": 12.2, "text": "不如 HTML 加 CLI" }
+  {
+    "start": 0.0,
+    "end": 4.48,
+    "text": "传统方案学 AE 要几个月，本方案会写网页就行。"
+  },
+  {
+    "start": 4.48,
+    "end": 7.69,
+    "text": "传统 3 天制作，本方案 3 分钟。"
+  },
+  {
+    "start": 7.69,
+    "end": 12.46,
+    "text": "AE 加 PR 加插件，不如 HTML 加 CLI。"
+  }
 ];
 const subtitleBar = document.getElementById('subtitle-bar');
 let _lastSub = null;

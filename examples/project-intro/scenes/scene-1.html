@@ -63,7 +63,7 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 <div class="glow cyan"></div>
 <div id="subtitle-bar" class="subtitle-bar"></div>
 <audio id="vo" src="voiceover_scene_1.mp3" preload="auto"></audio>
-<div id="scene-1" class="scene" data-duration="4.608">
+<div id="scene-1" class="scene" data-duration="4.6">
   <div class="anim s1-ring-wrap" data-delay="0" data-dur="0.6">
     <div class="s1-ring"></div>
     <div class="s1-ring inner"></div>
@@ -79,8 +79,16 @@ const SCENE_FADE_FRAMES = 8;
 const SCENE_ID = 1;
 const SCENE_TOTAL = 8;
 const SUBTITLES = [
-  { "start": 0.3, "end": 2.3, "text": "还在为做视频发愁？" },
-  { "start": 2.3, "end": 4.5, "text": "HTML 就能做视频！" }
+  {
+    "start": 0.0,
+    "end": 2.09,
+    "text": "还在为做视频发愁？"
+  },
+  {
+    "start": 2.09,
+    "end": 4.61,
+    "text": "HTML 就能做视频！"
+  }
 ];
 const subtitleBar = document.getElementById('subtitle-bar');
 let _lastSub = null;

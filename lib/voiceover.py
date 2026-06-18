@@ -6,7 +6,7 @@ worm-html-2-video 按场景配音工具
 测量每段真实时长(WordBoundary 不可靠,会返回 0),用 ffmpeg concat 拼接成
 完整 voiceover.mp3,并写入 scene_timings.json(每个场景的 start/end 秒数)。
 
-scene_timings.json 是后续 lib/sync_html.py 调整 video.html 时长的依据。
+scene_timings.json 是后续 lib/sync_html.py 调整 scenes/scene-N.html 时长的依据。
 
 Usage:
     python lib/voiceover.py [options]
@@ -25,9 +25,15 @@ Output scene_timings.json schema:
       "voice": "...", "rate": "...", "total_duration": <sec>,
       "scenes": [
         {"id": 1, "name": "...", "voiceover": "...", "subtitle": "...",
+         "segments": [{"text": "...", "start": <sec>, "end": <sec>}, ...],
          "start": <sec>, "end": <sec>, "duration": <sec>}
       ]
     }
+
+  `segments` lists each narration sentence with its measured start/end on a
+  LOCAL 0-based timeline for that scene. sync_html.py uses them so subtitle
+  text equals the spoken sentence and timing follows the real narration
+  rhythm (Edge-TTS WordBoundary is unreliable for Chinese, returning 0).
 """
 
 import asyncio
@@ -87,6 +93,18 @@ def _ffprobe_duration(path):
         return float(r.stdout.strip())
     except (ValueError, AttributeError):
         return 0.0
+
+
+def _split_sentences(text):
+    """Split voiceover text into sentences at Chinese sentence-end marks.
+
+    Keeps each sentence with its trailing punctuation. Returns non-empty
+    sentence strings in original order. Used to derive per-sentence subtitle
+    timing that follows the real narration rhythm instead of even splitting.
+    """
+    import re as _re
+    parts = _re.split(r'(?<=[。！？!?])', text)
+    return [p.strip() for p in parts if p.strip()]
 
 
 async def synth_scene(text, voice, rate, tmp_path):
@@ -159,6 +177,32 @@ async def generate_voiceover(script, voice, rate, scene_gap, out_mp3, out_timing
             dur = await synth_scene(text, voice, rate, scene_mp3)
             if dur <= 0:
                 dur = 0.5
+            # Derive per-sentence subtitle timing by synthesizing each sentence
+            # separately and scaling its measured duration to the scene's real
+            # duration (single-sentence synthesis has leading/trailing silence
+            # that would otherwise skew absolute offsets).
+            segments = []
+            sentences = _split_sentences(text)
+            if len(sentences) >= 2:
+                seg_durs = []
+                tmp_seg_dir = os.path.join(tmp_dir, f'segs_{idx}')
+                os.makedirs(tmp_seg_dir, exist_ok=True)
+                for si, sent in enumerate(sentences):
+                    seg_mp3 = os.path.join(tmp_seg_dir, f'seg_{si}.mp3')
+                    sd = await synth_scene(sent, voice, rate, seg_mp3)
+                    if sd <= 0:
+                        sd = 0.3
+                    seg_durs.append(sd)
+                scale = dur / sum(seg_durs) if sum(seg_durs) > 0 else 1.0
+                seg_cursor = 0.0
+                for sent, sd in zip(sentences, seg_durs):
+                    sd_s = sd * scale
+                    segments.append({
+                        'text': sent,
+                        'start': round(seg_cursor, 2),
+                        'end': round(seg_cursor + sd_s, 2),
+                    })
+                    seg_cursor += sd_s
             parts.append(scene_mp3)
             # Persist this scene's mp3 into scenes/ so each scene HTML can
             # embed it (<audio src="voiceover_scene_N.mp3">) for debug preview.
@@ -171,6 +215,7 @@ async def generate_voiceover(script, voice, rate, scene_gap, out_mp3, out_timing
             timings['scenes'].append({
                 'id': sid, 'name': name, 'voiceover': text,
                 'subtitle': str(scene.get('subtitle', '')),
+                'segments': segments,
                 'start': round(start, 3), 'end': round(end, 3), 'duration': round(dur, 3)})
             print(f"   [{idx}/{len(scenes)}] {name}: {dur:.2f}s ({start:.2f}-{end:.2f}s)")
             cursor = end

@@ -7,6 +7,10 @@ examples/
 # Dependencies
 node_modules/
 
+# Python cache
+__pycache__/
+*.pyc
+
 # Generated frames
 frames/
 
@@ -26,6 +30,22 @@ Thumbs.db
 # IDE
 .idea/
 .vscode/
+
+# Project docs & skill (kept in repo, not in npm package)
+docs/
+skill/
+AGENTS.md
+AGENTS.md.bak
+
+# Removed/legacy assets
+templates/
+
+# Temporary debug scripts & snapshot outputs
+_snapshot.mjs
+_verify_snapshots.mjs
+_snapshots/
+_snapshots_new/
+*.bak
 
 # Git
 .git/

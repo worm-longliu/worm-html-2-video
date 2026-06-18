@@ -67,7 +67,7 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 <div class="glow cyan"></div>
 <div id="subtitle-bar" class="subtitle-bar"></div>
 <audio id="vo" src="voiceover_scene_8.mp3" preload="auto"></audio>
-<div id="scene-8" class="scene" data-duration="7.44">
+<div id="scene-8" class="scene" data-duration="7.9">
   <div class="anim orbit-wrap" data-delay="0" data-dur="0.6">
     <div class="orbit"></div>
     <div class="orbit inner"></div>
@@ -84,9 +84,21 @@ const SCENE_FADE_FRAMES = 8;
 const SCENE_ID = 8;
 const SCENE_TOTAL = 8;
 const SUBTITLES = [
-  { "start": 0.3, "end": 2.6, "text": "worm-html-2-video" },
-  { "start": 2.6, "end": 4.8, "text": "开源免费，快来试试！" },
-  { "start": 4.8, "end": 7.2, "text": "一行命令即刻开始" }
+  {
+    "start": 0.0,
+    "end": 3.77,
+    "text": "worm-html-2-video，开源免费。"
+  },
+  {
+    "start": 3.77,
+    "end": 5.39,
+    "text": "快来试试吧！"
+  },
+  {
+    "start": 5.39,
+    "end": 7.44,
+    "text": "一条命令即刻开始。"
+  }
 ];
 const subtitleBar = document.getElementById('subtitle-bar');
 let _lastSub = null;
