@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<title>worm-html-2-video 项目介绍 - 场景5</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg-0: #0B0E1A; --bg-1: #161B30;
+  --amber: #FFB347; --amber-bright: #FFD56B;
+  --cyan: #5EE7FF; --violet: #B14DFF;
+  --text: #F5F7FF; --text-sub: #C9D2F0; --text-dim: #AEB8D8;
+  --glass: rgba(255,255,255,0.05); --glass-border: rgba(255,255,255,0.14);
+}
+body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
+  background: radial-gradient(ellipse at 50% 22%, #15182E 0%, #0B0E1A 70%);
+  font-family: "Noto Sans SC","Microsoft YaHei",sans-serif; -webkit-font-smoothing: antialiased; }
+.bg-noise { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E"); }
+.scene { position: absolute; inset: 0; padding: 150px 70px 280px; display: flex; flex-direction: column; z-index: 1; }
+.anim { opacity: 0; transform: translateY(30px); }
+.eyebrow { font-family: "Bricolage Grotesque",sans-serif; font-size: 26px; font-weight: 600;
+  letter-spacing: 0.35em; color: var(--amber); text-transform: uppercase; margin-bottom: 22px; }
+.s5-title { font-family: "Bricolage Grotesque","Noto Sans SC",sans-serif; font-size: 64px; font-weight: 800;
+  line-height: 1.15; color: var(--text); margin-bottom: 52px; }
+.s5-title em { font-style: normal; color: var(--amber); }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+.card { border-radius: 26px; padding: 40px 36px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  background: var(--glass); border: 1px solid var(--glass-border); min-height: 380px;
+  display: flex; flex-direction: column; }
+.card.c1 { border-color: rgba(255,179,71,0.5); box-shadow: 0 0 28px rgba(255,179,71,0.18); }
+.card.c2 { border-color: rgba(94,231,255,0.5); box-shadow: 0 0 28px rgba(94,231,255,0.18); }
+.card.c3 { border-color: rgba(177,77,255,0.5); box-shadow: 0 0 28px rgba(177,77,255,0.18); }
+.card.c4 { border-color: rgba(255,213,107,0.5); box-shadow: 0 0 28px rgba(255,213,107,0.18); }
+.card-icon { font-size: 64px; margin-bottom: 22px; }
+.card-title { font-family: "Bricolage Grotesque","Noto Sans SC",sans-serif; font-size: 38px; font-weight: 800;
+  color: var(--text); margin-bottom: 14px; }
+.card-desc { font-size: 27px; color: var(--text-sub); line-height: 1.5; flex: 1; }
+.card-tag { font-family: "JetBrains Mono",monospace; font-size: 20px; margin-top: 18px;
+  padding: 8px 14px; border-radius: 8px; align-self: flex-start; }
+.card.c1 .card-tag { background: rgba(255,179,71,0.18); color: var(--amber-bright); }
+.card.c2 .card-tag { background: rgba(94,231,255,0.18); color: var(--cyan); }
+.card.c3 .card-tag { background: rgba(177,77,255,0.18); color: var(--violet); }
+.card.c4 .card-tag { background: rgba(255,213,107,0.18); color: var(--amber-bright); }
+.subtitle-bar { position: absolute; left: 60px; right: 60px; bottom: 100px; min-height: 80px;
+  padding: 22px 36px; background: rgba(0,0,0,0.78); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border); border-radius: 18px; color: #FFFFFF; font-size: 44px; font-weight: 600;
+  line-height: 1.4; text-align: center; z-index: 9999; opacity: 0; transition: opacity 0.12s linear;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+  white-space: pre-line; word-break: break-word; }
+.debug-hint { position: absolute; top: 12px; left: 12px; z-index: 10000; font-size: 20px; color: var(--cyan);
+  background: rgba(0,0,0,0.5); padding: 6px 12px; border-radius: 8px; pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="debug-hint">场景 5/8 | ← → 切换 | 空格播放配音</div>
+<div class="bg-noise"></div>
+<div id="subtitle-bar" class="subtitle-bar"></div>
+<audio id="vo" src="voiceover_scene_5.mp3" preload="auto"></audio>
+<div id="scene-5" class="scene" data-duration="10.752">
+  <div class="anim eyebrow" data-delay="0" data-dur="0.5">FEATURES</div>
+  <div class="anim s5-title" data-delay="0.4" data-dur="0.6"><em>四大</em>核心特性</div>
+  <div class="grid">
+    <div class="anim card c1" data-delay="0.9" data-dur="0.4">
+      <div class="card-icon">🎯</div>
+      <div class="card-title">字幕对齐</div>
+      <div class="card-desc">语速算法自动计算时间轴，场景边界智能对齐</div>
+      <div class="card-tag">SUBTITLE SYNC</div>
+    </div>
+    <div class="anim card c2" data-delay="1.2" data-dur="0.4">
+      <div class="card-icon">🌙</div>
+      <div class="card-title">深色主题</div>
+      <div class="card-desc">四级颜色对比度系统，WCAG AA 标准可读性</div>
+      <div class="card-tag">DARK THEME</div>
+    </div>
+    <div class="anim card c3" data-delay="1.5" data-dur="0.4">
+      <div class="card-icon">📱</div>
+      <div class="card-title">多平台适配</div>
+      <div class="card-desc">一套 HTML 适配抖音 / 视频号 / B站 / 小红书</div>
+      <div class="card-tag">MULTI-PLATFORM</div>
+    </div>
+    <div class="anim card c4" data-delay="1.8" data-dur="0.4">
+      <div class="card-icon">🎙</div>
+      <div class="card-title">TTS 配音</div>
+      <div class="card-desc">Edge-TTS 中文男声，免费自然流畅</div>
+      <div class="card-tag">EDGE-TTS</div>
+    </div>
+  </div>
+</div>
+<script>
+const FPS = 30;
+const SCENE_FADE_FRAMES = 8;
+const SCENE_ID = 5;
+const SCENE_TOTAL = 8;
+const SUBTITLES = [
+  { "start": 0.3, "end": 3.8, "text": "字幕精准对齐" },
+  { "start": 3.8, "end": 7.0, "text": "语速算法自动计算时间轴" },
+  { "start": 7.0, "end": 10.5, "text": "一套 HTML 适配四大平台" }
+];
+const subtitleBar = document.getElementById('subtitle-bar');
+let _lastSub = null;
+function updateSubtitle(time) {
+  let active = null;
+  for (const sub of SUBTITLES) { if (time >= sub.start && time < sub.end) { active = sub; break; } }
+  if (active) {
+    if (active.text !== _lastSub) { subtitleBar.textContent = active.text; _lastSub = active.text; }
+    if (subtitleBar.style.opacity !== '1') subtitleBar.style.opacity = '1';
+  } else { if (subtitleBar.style.opacity !== '0') subtitleBar.style.opacity = '0'; }
+}
+const sceneEl = document.querySelector('.scene');
+const totalFrames = Math.round(parseFloat(sceneEl.dataset.duration) * FPS);
+function easeOut(t) { return 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3); }
+function renderFrame(frame) {
+  updateSubtitle(frame / FPS);
+  let op = 1;
+  if (frame < SCENE_FADE_FRAMES) op = easeOut(frame / SCENE_FADE_FRAMES);
+  else if (frame > totalFrames - SCENE_FADE_FRAMES) op = easeOut((totalFrames - frame) / SCENE_FADE_FRAMES);
+  sceneEl.style.opacity = op;
+  sceneEl.querySelectorAll('.anim').forEach(an => {
+    const dly = Math.round(parseFloat(an.dataset.delay) * FPS);
+    const du = Math.round(parseFloat(an.dataset.dur) * FPS);
+    if (frame < dly) { an.style.opacity = '0'; an.style.transform = 'translateY(30px)'; }
+    else if (frame < dly + du) { const p = (frame - dly) / du; const e = easeOut(p); an.style.opacity = e; an.style.transform = 'translateY(' + (30*(1-e)) + 'px)'; }
+    else { an.style.opacity = '1'; an.style.transform = 'translateY(0)'; }
+  });
+}
+window.__hyperframes = {
+  getTotalFrames: () => totalFrames,
+  getSceneCount: () => 1,
+  getSceneDuration: () => parseFloat(sceneEl.dataset.duration),
+  gotoFrame: (frame) => renderFrame(Math.max(0, Math.min(frame, totalFrames - 1)))
+};
+function gotoScene(delta) {
+  const next = SCENE_ID + delta;
+  if (next < 1 || next > SCENE_TOTAL) return;
+  location.href = 'scene-' + next + '.html';
+}
+let _f = 0; let _playing = false; let _iv = null;
+const vo = document.getElementById('vo');
+function playPreview() {
+  if (_playing) { clearInterval(_iv); _playing = false; vo.pause(); return; }
+  _playing = true; _f = 0;
+  vo.currentTime = 0; vo.play().catch(function(){});
+  _iv = setInterval(function () { _f = _f + 1; if (_f >= totalFrames) { clearInterval(_iv); _playing = false; gotoScene(1); return; } renderFrame(_f); }, 1000 / FPS);
+}
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') { e.preventDefault(); playPreview(); }
+  else if (e.code === 'ArrowRight') { if (_playing) { clearInterval(_iv); _playing = false; } gotoScene(1); }
+  else if (e.code === 'ArrowLeft') { if (_playing) { clearInterval(_iv); _playing = false; } gotoScene(-1); }
+  else if (e.code === 'ArrowUp') { e.preventDefault(); _f = Math.min(_f + 1, totalFrames - 1); renderFrame(_f); }
+  else if (e.code === 'ArrowDown') { e.preventDefault(); _f = Math.max(_f - 1, 0); renderFrame(_f); }
+  else if (e.code === 'Home') { _f = 0; renderFrame(_f); }
+  else if (e.code === 'End') { _f = totalFrames - 1; renderFrame(_f); }
+});
+renderFrame(0);
+</script>
+</body>
+</html>

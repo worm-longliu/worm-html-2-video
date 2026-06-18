@@ -22,11 +22,11 @@
 
 核心变化：`script.json` 是唯一权威数据源（场景规划+字幕+配音文案，不含时间），
 时长由配音反推——`voiceover.py` 按场景合成并测量真实时长，`sync_html.py`
-据此自动更新 `video.html` 的 `data-duration` 与 `SUBTITLES` 时间轴。
+据此自动更新 `scenes/` 各场景 HTML 的 `data-duration` 与局部 `SUBTITLES` 时间轴。
 
 ### 获取项目
 
-`ash
+```bash
 # 从 Gitee 克隆（国内推荐）
 git clone https://gitee.com/liulong_oschina/worm-html-2-video.git
 cd worm-html-2-video
@@ -36,15 +36,14 @@ npm install
 git clone https://github.com/worm-longliu/worm-html-2-video.git
 cd worm-html-2-video
 npm install
-`
+```
 
 > **Gitee 用户注意**：Gitee 未托管 npm 包，因此 
-px worm-html-2-video 无法直接使用。
+npx worm-html-2-video 无法直接使用。
 > 请使用 git clone 获取项目后，通过 
-ode bin/cli.js <command> 运行所有命令。
+node bin/cli.js <command> 运行所有命令。
 > 例如：
-ode bin/cli.js init 代替 
-px worm-html-2-video init。
+node bin/cli.js init 代替 npx worm-html-2-video init。
 
 ### 快速开始
 
@@ -53,14 +52,15 @@ px worm-html-2-video init。
 npx worm-html-2-video init
 # 编辑 script.json：场景画面/动画/关键元素/配音文案/字幕文本  ★人工审核
 
-# 2. 由脚本生成 HTML 骨架（字幕条+SUBTITLES占位+data-duration初值）
+# 2. 由脚本生成 scenes/ 多文件骨架（每场景一个 HTML + index.html，字幕条+SUBTITLES占位+data-duration初值）
 npx worm-html-2-video script html
-# 人工审核/调整 video.html 的场景视觉与动画  ★人工审核
+# 人工审核/调整各 scenes/scene-N.html 的场景视觉与动画  ★人工审核
+# 调试：浏览器打开 scenes/index.html，← → 切换场景，空格播放该场景配音预览
 
 # 3. 按场景生成配音，记录每场景真实时长 → scene_timings.json
 npx worm-html-2-video voiceover
 
-# 4. 据配音时长自动调整 video.html（data-duration + SUBTITLES 时间轴）
+# 4. 据配音时长自动调整 scenes/ 各场景 HTML（data-duration + 局部 SUBTITLES 时间轴）
 npx worm-html-2-video sync
 
 # 5. Playwright 逐帧截图 → video_html.mp4
@@ -173,12 +173,12 @@ npx playwright install chromium  # 下载 Chromium 浏览器二进制
 | `npx worm-html-2-video doctor` | 检查环境依赖,缺失项打印手工全局安装指引 |
 | `npx worm-html-2-video script <sub>` | 脚本工具：`validate` / `vo` / `doc` / `html` |
 | `npx worm-html-2-video voiceover` | 按场景配音 → `voiceover.mp3` + `scene_timings.json` |
-| `npx worm-html-2-video sync` | 据配音时长调整 `video.html`（data-duration + SUBTITLES） |
+| `npx worm-html-2-video sync` | 据配音时长调整 `scenes/` 各场景 HTML（data-duration + SUBTITLES） |
 | `npx worm-html-2-video capture` | Playwright 截图 → `video_html.mp4` |
 | `npx worm-html-2-video generate` | 合成配音 → `video_final.mp4`（复用已有 voiceover.mp3） |
 | `npx worm-html-2-video install-skill` | 将内置 skill/ 安装到本地 Codex skills 目录 |
 
-**script 子命令：** `validate`（校验）`vo`（派生 voiceover_text.txt）`doc`（派生 script.md）`html`（生成 video.html 骨架）
+**script 子命令：** `validate`（校验）`vo`（派生 voiceover_text.txt）`doc`（派生 script.md）`html`（生成 scenes/ 多文件骨架）
 **voiceover 选项：** `--script <p>` `--output <p>` `--timings <p>` `--voice <name>` `--rate <rate>` `--scene-gap <s>`
 **sync 选项：** `--html <p>` `--timings <p>` `--script <p>` `--output <p>` `--tail-buffer <s>`
 **capture 选项：** `--html <path>` `--output <path>` `--fps <number>`
@@ -196,7 +196,7 @@ worm-html-2-video/
 ├── lib/                          # 核心工具脚本
 │   ├── script_tool.py           # 脚本校验/派生(voiceover_text.txt,script.md)/生成HTML骨架
 │   ├── voiceover.py             # 按场景配音+测量时长 → voiceover.mp3 + scene_timings.json
-│   ├── sync_html.py             # 据配音时长调整 video.html(data-duration + SUBTITLES)
+│   ├── sync_html.py             # 据配音时长调整 scenes/ 各场景 HTML(data-duration + 局部 SUBTITLES)
 │   ├── capture.mjs              # Playwright 截图（通用版）
 │   └── generate_video.py        # 合成配音→video_final.mp4（复用已有voiceover.mp3）
 ├── docs/                         # 技术文档
@@ -211,11 +211,11 @@ worm-html-2-video/
 ├── examples/                     # 示例（仅 Git，不包含在 npm 包中）
 │   ├── minimal/                  # 最小可运行示例（脚本驱动）
 │   │   ├── script.json               # 唯一权威数据源（场景+字幕+配音文案）
-│   │   ├── video.html                # 由 script_tool html 生成，sync 调整时长
+│   │   ├── scenes/                   # 由 script_tool html 生成，sync 调整时长（每场景一个 HTML + index.html）
 │   │   ├── voiceover_text.txt        # 由 script.json 派生（人工可读）
 │   │   └── package.json              # scripts 指向 ../../lib/ 通用工具
 │   ├── full-demo/                # 完整演示（8场景52秒）
-│   │   ├── video.html                # 字幕已内嵌在 SUBTITLES 数组
+│   │   ├── scenes/                   # 字幕已内嵌在各 scene-N.html 的 SUBTITLES 数组
 │   │   ├── capture.mjs
 │   │   ├── generate_video.py
 │   │   ├── voiceover_text.txt
@@ -223,7 +223,7 @@ worm-html-2-video/
 │   │   ├── script.md
 │   │   └── package.json
 │   └── skill-intro/              # AI创作全过程（7场景48秒，含思考记录）
-│       ├── video.html                # 字幕已内嵌在 SUBTITLES 数组
+│       ├── scenes/                   # 字幕已内嵌在各 scene-N.html 的 SUBTITLES 数组
 │       ├── capture.mjs
 │       ├── generate_video.py
 │       ├── voiceover_text.txt
@@ -308,7 +308,7 @@ Playwright 逐帧调用 `gotoFrame()` 截图，实现精确的动画捕获。
 - `thinking_process.md` — AI 的完整决策链路（需求分析→时长规划→文案创作→视觉设计→动画编排→代码生成→质量验证）
 - `script.md` — 分镜脚本（7场景48秒）
 - `voiceover_text.txt` — 带时间标记的配音文案
-- `subtitle.srt` — 旧 SRT 文件,新流程不再生成 (字幕已内嵌在 video.html)
+- `subtitle.srt` — 旧 SRT 文件,新流程不再生成 (字幕已内嵌在 scenes/ 各 scene-N.html)
 - 完整可运行的 HTML + 截图 + 合成脚本
 
 ## 适用场景

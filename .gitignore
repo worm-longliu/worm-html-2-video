@@ -34,3 +34,10 @@ skills-lock.json
 
 # Auto-installed Codex skills (not project-owned)
 .agent/skills/frontend-design/
+
+# Temporary debug scripts and snapshot outputs
+_snapshot.mjs
+_verify_snapshots.mjs
+_snapshots/
+_snapshots_new/
+*.bak

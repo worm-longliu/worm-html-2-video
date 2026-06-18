@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<title>worm-html-2-video 项目介绍 - 场景2</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg-0: #0B0E1A; --bg-1: #161B30;
+  --amber: #FFB347; --amber-bright: #FFD56B;
+  --cyan: #5EE7FF; --red: #FF5C7A;
+  --text: #F5F7FF; --text-sub: #C9D2F0; --text-dim: #AEB8D8;
+  --glass: rgba(255,255,255,0.05); --glass-border: rgba(255,255,255,0.14);
+}
+body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
+  background: radial-gradient(ellipse at 50% 25%, #1A1428 0%, #0B0E1A 70%);
+  font-family: "Noto Sans SC","Microsoft YaHei",sans-serif; -webkit-font-smoothing: antialiased; }
+.bg-noise { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E"); }
+.scene { position: absolute; inset: 0; padding: 150px 70px 280px; display: flex; flex-direction: column; z-index: 1; }
+.anim { opacity: 0; transform: translateY(30px); }
+.eyebrow { font-family: "Bricolage Grotesque",sans-serif; font-size: 26px; font-weight: 600;
+  letter-spacing: 0.35em; color: var(--amber); text-transform: uppercase; margin-bottom: 22px; }
+.s2-title { font-family: "Bricolage Grotesque","Noto Sans SC",sans-serif; font-size: 64px; font-weight: 800;
+  line-height: 1.15; color: var(--text); margin-bottom: 60px; }
+.s2-title em { font-style: normal; color: var(--amber); }
+.s2-grid { display: flex; flex-direction: column; gap: 36px; }
+.card { border-radius: 28px; padding: 44px 48px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.card.old { background: linear-gradient(135deg, rgba(255,92,122,0.12), rgba(255,92,122,0.04));
+  border: 1px solid rgba(255,92,122,0.45); box-shadow: 0 0 30px rgba(255,92,122,0.18); }
+.card.new { background: linear-gradient(135deg, rgba(255,179,71,0.16), rgba(94,231,255,0.06));
+  border: 1px solid rgba(255,179,71,0.55); box-shadow: 0 0 36px rgba(255,179,71,0.25); }
+.card-head { display: flex; align-items: center; gap: 18px; margin-bottom: 28px; }
+.card-tag { font-family: "Bricolage Grotesque",monospace; font-size: 22px; font-weight: 700;
+  padding: 8px 18px; border-radius: 10px; letter-spacing: 0.1em; }
+.card.old .card-tag { background: rgba(255,92,122,0.2); color: var(--red); }
+.card.new .card-tag { background: rgba(255,179,71,0.22); color: var(--amber-bright); }
+.card-name { font-size: 36px; font-weight: 700; color: var(--text); }
+.li { display: flex; align-items: center; gap: 18px; font-size: 34px; color: var(--text-sub); line-height: 1.5; margin-bottom: 16px; }
+.li:last-child { margin-bottom: 0; }
+.mark { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 900; flex-shrink: 0; }
+.card.old .mark { background: rgba(255,92,122,0.25); color: var(--red); }
+.card.new .mark { background: rgba(255,179,71,0.25); color: var(--amber-bright); }
+.s2-vs { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 2;
+  font-family: "Bricolage Grotesque",sans-serif; font-size: 52px; font-weight: 800; color: var(--text);
+  background: var(--bg-0); border: 2px solid var(--amber); border-radius: 50%; width: 110px; height: 110px;
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(255,179,71,0.4); }
+.subtitle-bar { position: absolute; left: 60px; right: 60px; bottom: 100px; min-height: 80px;
+  padding: 22px 36px; background: rgba(0,0,0,0.78); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border); border-radius: 18px; color: #FFFFFF; font-size: 44px; font-weight: 600;
+  line-height: 1.4; text-align: center; z-index: 9999; opacity: 0; transition: opacity 0.12s linear;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+  white-space: pre-line; word-break: break-word; }
+.debug-hint { position: absolute; top: 12px; left: 12px; z-index: 10000; font-size: 20px; color: var(--cyan);
+  background: rgba(0,0,0,0.5); padding: 6px 12px; border-radius: 8px; pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="debug-hint">场景 2/8 | ← → 切换 | 空格播放配音</div>
+<div class="bg-noise"></div>
+<div id="subtitle-bar" class="subtitle-bar"></div>
+<audio id="vo" src="voiceover_scene_2.mp3" preload="auto"></audio>
+<div id="scene-2" class="scene" data-duration="11.664">
+  <div class="anim eyebrow" data-delay="0" data-dur="0.5">PAIN POINT</div>
+  <div class="anim s2-title" data-delay="0.4" data-dur="0.6">传统做法 vs <em>本方案</em></div>
+  <div class="s2-grid" style="position: relative;">
+    <div class="anim card old" data-delay="0.9" data-dur="0.5">
+      <div class="card-head"><span class="card-tag">OLD</span><span class="card-name">传统做法</span></div>
+      <div class="li"><span class="mark">×</span><span>学 AE 学 PR，门槛高</span></div>
+      <div class="li"><span class="mark">×</span><span>装软件就半天</span></div>
+      <div class="li"><span class="mark">×</span><span>60 秒视频做三天</span></div>
+    </div>
+    <div class="anim card new" data-delay="2.0" data-dur="0.5">
+      <div class="card-head"><span class="card-tag">NEW</span><span class="card-name">本方案</span></div>
+      <div class="li"><span class="mark">✓</span><span>HTML + CSS 动画</span></div>
+      <div class="li"><span class="mark">✓</span><span>一行命令即可</span></div>
+      <div class="li"><span class="mark">✓</span><span>分钟级出片</span></div>
+    </div>
+    <div class="anim s2-vs" data-delay="1.4" data-dur="0.4">VS</div>
+  </div>
+</div>
+<script>
+const FPS = 30;
+const SCENE_FADE_FRAMES = 8;
+const SCENE_ID = 2;
+const SCENE_TOTAL = 8;
+const SUBTITLES = [
+  { "start": 0.3, "end": 3.0, "text": "传统做法：学 AE 学 PR" },
+  { "start": 3.0, "end": 5.5, "text": "装软件就半天" },
+  { "start": 5.5, "end": 8.5, "text": "60 秒视频做三天" },
+  { "start": 8.5, "end": 11.4, "text": "本方案 HTML 加 CSS 动画\n分钟级出片" }
+];
+const subtitleBar = document.getElementById('subtitle-bar');
+let _lastSub = null;
+function updateSubtitle(time) {
+  let active = null;
+  for (const sub of SUBTITLES) { if (time >= sub.start && time < sub.end) { active = sub; break; } }
+  if (active) {
+    if (active.text !== _lastSub) { subtitleBar.textContent = active.text; _lastSub = active.text; }
+    if (subtitleBar.style.opacity !== '1') subtitleBar.style.opacity = '1';
+  } else { if (subtitleBar.style.opacity !== '0') subtitleBar.style.opacity = '0'; }
+}
+const sceneEl = document.querySelector('.scene');
+const totalFrames = Math.round(parseFloat(sceneEl.dataset.duration) * FPS);
+function easeOut(t) { return 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3); }
+function renderFrame(frame) {
+  updateSubtitle(frame / FPS);
+  let op = 1;
+  if (frame < SCENE_FADE_FRAMES) op = easeOut(frame / SCENE_FADE_FRAMES);
+  else if (frame > totalFrames - SCENE_FADE_FRAMES) op = easeOut((totalFrames - frame) / SCENE_FADE_FRAMES);
+  sceneEl.style.opacity = op;
+  sceneEl.querySelectorAll('.anim').forEach(an => {
+    const dly = Math.round(parseFloat(an.dataset.delay) * FPS);
+    const du = Math.round(parseFloat(an.dataset.dur) * FPS);
+    if (frame < dly) { an.style.opacity = '0'; an.style.transform = 'translateY(30px)'; }
+    else if (frame < dly + du) { const p = (frame - dly) / du; const e = easeOut(p); an.style.opacity = e; an.style.transform = 'translateY(' + (30*(1-e)) + 'px)'; }
+    else { an.style.opacity = '1'; an.style.transform = 'translateY(0)'; }
+  });
+}
+window.__hyperframes = {
+  getTotalFrames: () => totalFrames,
+  getSceneCount: () => 1,
+  getSceneDuration: () => parseFloat(sceneEl.dataset.duration),
+  gotoFrame: (frame) => renderFrame(Math.max(0, Math.min(frame, totalFrames - 1)))
+};
+function gotoScene(delta) {
+  const next = SCENE_ID + delta;
+  if (next < 1 || next > SCENE_TOTAL) return;
+  location.href = 'scene-' + next + '.html';
+}
+let _f = 0; let _playing = false; let _iv = null;
+const vo = document.getElementById('vo');
+function playPreview() {
+  if (_playing) { clearInterval(_iv); _playing = false; vo.pause(); return; }
+  _playing = true; _f = 0;
+  vo.currentTime = 0; vo.play().catch(function(){});
+  _iv = setInterval(function () { _f = _f + 1; if (_f >= totalFrames) { clearInterval(_iv); _playing = false; gotoScene(1); return; } renderFrame(_f); }, 1000 / FPS);
+}
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') { e.preventDefault(); playPreview(); }
+  else if (e.code === 'ArrowRight') { if (_playing) { clearInterval(_iv); _playing = false; } gotoScene(1); }
+  else if (e.code === 'ArrowLeft') { if (_playing) { clearInterval(_iv); _playing = false; } gotoScene(-1); }
+  else if (e.code === 'ArrowUp') { e.preventDefault(); _f = Math.min(_f + 1, totalFrames - 1); renderFrame(_f); }
+  else if (e.code === 'ArrowDown') { e.preventDefault(); _f = Math.max(_f - 1, 0); renderFrame(_f); }
+  else if (e.code === 'Home') { _f = 0; renderFrame(_f); }
+  else if (e.code === 'End') { _f = totalFrames - 1; renderFrame(_f); }
+});
+renderFrame(0);
+</script>
+</body>
+</html>

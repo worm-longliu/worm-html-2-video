@@ -13,7 +13,7 @@ Usage:
     python lib/sync_html.py [options]
 
 Options:
-    --html <path>      Path to video.html (default: ./video.html)
+    --html <path>      Path to scenes/ dir (default: ./scenes)
     --timings <path>   Path to scene_timings.json (default: ./scene_timings.json)
     --script <path>    Path to script.json (default: ./script.json)
     --output <path>    Output html path (default: overwrite --html)
@@ -81,37 +81,25 @@ def compute_durations(timings, tail_buffer):
     # guard against zero durations
     durs = [max(0.5, d) for d in durs]
     return durs
-def compute_subtitles(script, timings, durations):
-    """Build SUBTITLES entries aligned to the real voiceover timeline.
+def compute_scene_subtitles(scene, dur):
+    """Build SUBTITLES entries for ONE scene on a LOCAL 0-based timeline.
 
-    For each scene, subtitle text comes from script.json. The subtitle
-    window is [scene_start + SCENE_GAP, scene_start + duration - SCENE_GAP].
-    Long subtitles (multi-line via \\n) are split into multiple entries,
-    time-shared evenly within the scene window.
+    The subtitle window is [SCENE_GAP, dur - SCENE_GAP]. Multi-line
+    subtitles (split by newline) are time-shared evenly within the window.
     """
+    start = SCENE_GAP
+    end = dur - SCENE_GAP
+    if end <= start:
+        end = start + 0.1
+    sub_text = str(scene.get("subtitle", "")).strip()
+    lines = [ln for ln in sub_text.split("\n") if ln.strip()] or [sub_text]
+    available = end - start
+    per = max(1.0, min(MAX_SUB_DURATION, available / len(lines)))
     entries = []
-    cursor = 0.0
-    scene_scenes = script['scenes']
-    for idx, tscene in enumerate(timings['scenes']):
-        dur = durations[idx]
-        start = cursor + SCENE_GAP
-        end = cursor + dur - SCENE_GAP
-        if end <= start:
-            end = start + 0.1
-        # subtitle text from script (fallback to timings subtitle)
-        sub_text = ''
-        if idx < len(scene_scenes):
-            sub_text = str(scene_scenes[idx].get('subtitle', '')).strip()
-        if not sub_text:
-            sub_text = str(tscene.get('subtitle', '')).strip()
-        lines = [ln for ln in sub_text.split('\n') if ln.strip()] or [sub_text]
-        available = end - start
-        per = max(1.0, min(MAX_SUB_DURATION, available / len(lines)))
-        for j, ln in enumerate(lines):
-            s = start + j * per
-            e = min(start + (j + 1) * per, end)
-            entries.append({'start': round(s, 2), 'end': round(e, 2), 'text': ln})
-        cursor += dur
+    for j, ln in enumerate(lines):
+        s = start + j * per
+        e = min(start + (j + 1) * per, end)
+        entries.append({"start": round(s, 2), "end": round(e, 2), "text": ln})
     return entries
 
 
@@ -173,43 +161,55 @@ def replace_subtitles(html, subtitles):
     return new_html, n
 
 
+def _scene_files(scenes_dir):
+    """Return ordered list of scenes/scene-N.html paths."""
+    if not os.path.isdir(scenes_dir):
+        return []
+    files = [f for f in os.listdir(scenes_dir) if re.match(r"scene-\d+\.html$", f)]
+    files.sort(key=lambda f: int(re.match(r"scene-(\d+)\.html$", f).group(1)))
+    return [os.path.join(scenes_dir, f) for f in files]
+
+
 def main():
     opts = parse_args()
-    html_path = opts['html'] or os.path.join(os.getcwd(), 'video.html')
-    timings_path = opts['timings'] or os.path.join(os.getcwd(), 'scene_timings.json')
-    script_path = opts['script'] or os.path.join(os.getcwd(), 'script.json')
-    out_path = opts['output'] or html_path
-    tail_buffer = float(opts['tail_buffer']) if opts['tail_buffer'] is not None else 0.5
+    scenes_dir = opts["html"] or os.path.join(os.getcwd(), "scenes")
+    timings_path = opts["timings"] or os.path.join(os.getcwd(), "scene_timings.json")
+    script_path = opts["script"] or os.path.join(os.getcwd(), "script.json")
+    tail_buffer = float(opts["tail_buffer"]) if opts["tail_buffer"] is not None else 0.5
 
-    if not os.path.exists(html_path):
-        print(f"❌ video.html not found: {html_path}")
-        print("   Generate it first: python lib/script_tool.py html")
+    scene_files = _scene_files(scenes_dir)
+    if not scene_files:
+        print("[ERR] No scene-N.html found under: " + scenes_dir)
+        print("   Generate them first: python lib/script_tool.py html")
         sys.exit(1)
-    timings = load_json(timings_path, 'scene_timings.json')
-    script = load_json(script_path, 'script.json')
+    timings = load_json(timings_path, "scene_timings.json")
+    script = load_json(script_path, "script.json")
 
     durations = compute_durations(timings, tail_buffer)
     total = sum(durations)
-    print(f"🔧 Syncing video.html to voiceover timings")
-    print(f"   Scenes: {len(durations)} | Total duration: {total:.2f}s "
-          f"(voiceover: {timings.get('total_duration', 0):.2f}s)")
+    print("[sync] Syncing scenes/ to voiceover timings")
+    print("   Scenes: %d | Total duration: %.2fs (voiceover: %.2fs)" % (
+          len(durations), total, timings.get("total_duration", 0)))
 
-    with open(html_path, 'r', encoding='utf-8') as f:
-        html = f.read()
+    script_scenes = script["scenes"]
+    for idx, path in enumerate(scene_files):
+        if idx >= len(durations):
+            break
+        dur = durations[idx]
+        with open(path, "r", encoding="utf-8") as f:
+            html = f.read()
+        html, n = replace_scene_durations(html, [dur])
+        scene_obj = script_scenes[idx] if idx < len(script_scenes) else {}
+        subs = compute_scene_subtitles(scene_obj, dur)
+        html, n_subs = replace_subtitles(html, subs)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(html)
+        print("   [%d/%d] %s: dur=%.1fs, %d subs" % (
+              idx + 1, len(scene_files), os.path.basename(path), dur, len(subs)))
 
-    html, n_scenes = replace_scene_durations(html, durations)
-    print(f"   Updated {n_scenes} scene data-duration values")
-
-    subtitles = compute_subtitles(script, timings, durations)
-    html, n_subs = replace_subtitles(html, subtitles)
-    if n_subs:
-        print(f"   Updated SUBTITLES array ({len(subtitles)} entries)")
-
-    with open(out_path, 'w', encoding='utf-8') as f:
-        f.write(html)
-    print(f"\n✅ video.html synced: {out_path}")
-    print(f"   Next: node lib/capture.mjs  →  python lib/generate_video.py")
+    print("\n[OK] scenes/ synced (%d files)" % len(scene_files))
+    print("   Next: node lib/capture.mjs  ->  python lib/generate_video.py")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

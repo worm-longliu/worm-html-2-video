@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<title>worm-html-2-video 项目介绍 - 场景4</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg-0: #0B0E1A; --bg-1: #161B30;
+  --amber: #FFB347; --amber-bright: #FFD56B;
+  --cyan: #5EE7FF; --green: #7EE787;
+  --text: #F5F7FF; --text-sub: #C9D2F0; --text-dim: #AEB8D8;
+  --glass: rgba(255,255,255,0.05); --glass-border: rgba(255,255,255,0.14);
+}
+body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
+  background: radial-gradient(ellipse at 50% 20%, #1B1A2E 0%, #0B0E1A 70%);
+  font-family: "Noto Sans SC","Microsoft YaHei",sans-serif; -webkit-font-smoothing: antialiased; }
+.bg-noise { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E"); }
+.scene { position: absolute; inset: 0; padding: 140px 70px 280px; display: flex; flex-direction: column; z-index: 1; }
+.anim { opacity: 0; transform: translateY(30px); }
+.eyebrow { font-family: "Bricolage Grotesque",sans-serif; font-size: 26px; font-weight: 600;
+  letter-spacing: 0.35em; color: var(--amber); text-transform: uppercase; margin-bottom: 20px; }
+.s4-title { font-family: "Bricolage Grotesque","Noto Sans SC",sans-serif; font-size: 62px; font-weight: 800;
+  line-height: 1.15; color: var(--text); margin-bottom: 16px; }
+.s4-title em { font-style: normal; color: var(--amber); }
+.s4-sub { font-size: 30px; color: var(--text-dim); margin-bottom: 44px; }
+.steps { display: flex; flex-direction: column; gap: 18px; }
+.step { display: flex; align-items: center; gap: 26px; padding: 22px 30px; border-radius: 18px;
+  background: var(--glass); border: 1px solid var(--glass-border); backdrop-filter: blur(10px); }
+.step.last { background: linear-gradient(90deg, rgba(126,231,135,0.18), rgba(255,179,71,0.08));
+  border: 1px solid rgba(126,231,135,0.55); box-shadow: 0 0 26px rgba(126,231,135,0.22); }
+.step-num { font-family: "Bricolage Grotesque",monospace; font-size: 30px; font-weight: 800;
+  color: var(--amber); width: 56px; flex-shrink: 0; }
+.step.last .step-num { color: var(--green); }
+.step-icon { font-size: 34px; width: 50px; text-align: center; flex-shrink: 0; }
+.step-body { flex: 1; }
+.step-name { font-size: 33px; font-weight: 700; color: var(--text); }
+.step-desc { font-size: 22px; color: var(--text-dim); margin-top: 2px; }
+.step.last .step-name { color: var(--green); }
+.subtitle-bar { position: absolute; left: 60px; right: 60px; bottom: 100px; min-height: 80px;
+  padding: 22px 36px; background: rgba(0,0,0,0.78); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border); border-radius: 18px; color: #FFFFFF; font-size: 44px; font-weight: 600;
+  line-height: 1.4; text-align: center; z-index: 9999; opacity: 0; transition: opacity 0.12s linear;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+  white-space: pre-line; word-break: break-word; }
+.debug-hint { position: absolute; top: 12px; left: 12px; z-index: 10000; font-size: 20px; color: var(--cyan);
+  background: rgba(0,0,0,0.5); padding: 6px 12px; border-radius: 8px; pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="debug-hint">场景 4/8 | ← → 切换 | 空格播放配音</div>
+<div class="bg-noise"></div>
+<div id="subtitle-bar" class="subtitle-bar"></div>
+<audio id="vo" src="voiceover_scene_4.mp3" preload="auto"></audio>
+<div id="scene-4" class="scene" data-duration="11.472">
+  <div class="anim eyebrow" data-delay="0" data-dur="0.5">PIPELINE</div>
+  <div class="anim s4-title" data-delay="0.4" data-dur="0.6">全程<em>六步</em>自动化</div>
+  <div class="anim s4-sub" data-delay="0.9" data-dur="0.4">一行命令，从脚本到成片</div>
+  <div class="steps">
+    <div class="anim step" data-delay="1.4" data-dur="0.4"><span class="step-num">01</span><span class="step-icon">📝</span><div class="step-body"><div class="step-name">编写脚本</div><div class="step-desc">script.json 唯一数据源</div></div></div>
+    <div class="anim step" data-delay="1.9" data-dur="0.4"><span class="step-num">02</span><span class="step-icon">🎨</span><div class="step-body"><div class="step-name">生成 HTML</div><div class="step-desc">scenes/ 多场景骨架</div></div></div>
+    <div class="anim step" data-delay="2.4" data-dur="0.4"><span class="step-num">03</span><span class="step-icon">🔊</span><div class="step-body"><div class="step-name">Edge-TTS 配音</div><div class="step-desc">按场景合成并测时长</div></div></div>
+    <div class="anim step" data-delay="2.9" data-dur="0.4"><span class="step-num">04</span><span class="step-icon">⏱</span><div class="step-body"><div class="step-name">同步时间轴</div><div class="step-desc">data-duration + 字幕对齐</div></div></div>
+    <div class="anim step" data-delay="3.4" data-dur="0.4"><span class="step-num">05</span><span class="step-icon">📸</span><div class="step-body"><div class="step-name">帧采集编码</div><div class="step-desc">Playwright 截图 → MP4</div></div></div>
+    <div class="anim step last" data-delay="3.9" data-dur="0.5"><span class="step-num">06</span><span class="step-icon">✓</span><div class="step-body"><div class="step-name">合成输出</div><div class="step-desc">voiceover.mp3 合入 → video_final.mp4</div></div></div>
+  </div>
+</div>
+<script>
+const FPS = 30;
+const SCENE_FADE_FRAMES = 8;
+const SCENE_ID = 4;
+const SCENE_TOTAL = 8;
+const SUBTITLES = [
+  { "start": 0.3, "end": 3.5, "text": "全程六步自动化" },
+  { "start": 3.5, "end": 7.0, "text": "编写脚本到合成视频" },
+  { "start": 7.0, "end": 11.2, "text": "一行命令全自动完成" }
+];
+const subtitleBar = document.getElementById('subtitle-bar');
+let _lastSub = null;
+function updateSubtitle(time) {
+  let active = null;
+  for (const sub of SUBTITLES) { if (time >= sub.start && time < sub.end) { active = sub; break; } }
+  if (active) {
+    if (active.text !== _lastSub) { subtitleBar.textContent = active.text; _lastSub = active.text; }
+    if (subtitleBar.style.opacity !== '1') subtitleBar.style.opacity = '1';
+  } else { if (subtitleBar.style.opacity !== '0') subtitleBar.style.opacity = '0'; }
+}
+const sceneEl = document.querySelector('.scene');
+const totalFrames = Math.round(parseFloat(sceneEl.dataset.duration) * FPS);
+function easeOut(t) { return 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3); }
+function renderFrame(frame) {
+  updateSubtitle(frame / FPS);
+  let op = 1;
+  if (frame < SCENE_FADE_FRAMES) op = easeOut(frame / SCENE_FADE_FRAMES);
+  else if (frame > totalFrames - SCENE_FADE_FRAMES) op = easeOut((totalFrames - frame) / SCENE_FADE_FRAMES);
+  sceneEl.style.opacity = op;
+  sceneEl.querySelectorAll('.anim').forEach(an => {
+    const dly = Math.round(parseFloat(an.dataset.delay) * FPS);
+    const du = Math.round(parseFloat(an.dataset.dur) * FPS);
+    if (frame < dly) { an.style.opacity = '0'; an.style.transform = 'translateY(30px)'; }
+    else if (frame < dly + du) { const p = (frame - dly) / du; const e = easeOut(p); an.style.opacity = e; an.style.transform = 'translateY(' + (30*(1-e)) + 'px)'; }
+    else { an.style.opacity = '1'; an.style.transform = 'translateY(0)'; }
+  });
+}
+window.__hyperframes = {
+  getTotalFrames: () => totalFrames,
+  getSceneCount: () => 1,
+  getSceneDuration: () => parseFloat(sceneEl.dataset.duration),
+  gotoFrame: (frame) => renderFrame(Math.max(0, Math.min(frame, totalFrames - 1)))
+};
+function gotoScene(delta) {
+  const next = SCENE_ID + delta;
+  if (next < 1 || next > SCENE_TOTAL) return;
+  location.href = 'scene-' + next + '.html';
+}
+let _f = 0; let _playing = false; let _iv = null;
+const vo = document.getElementById('vo');
+function playPreview() {
+  if (_playing) { clearInterval(_iv); _playing = false; vo.pause(); return; }
+  _playing = true; _f = 0;
+  vo.currentTime = 0; vo.play().catch(function(){});
+  _iv = setInterval(function () { _f = _f + 1; if (_f >= totalFrames) { clearInterval(_iv); _playing = false; gotoScene(1); return; } renderFrame(_f); }, 1000 / FPS);
+}
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') { e.preventDefault(); playPreview(); }
+  else if (e.code === 'ArrowRight') { if (_playing) { clearInterval(_iv); _playing = false; } gotoScene(1); }
+  else if (e.code === 'ArrowLeft') { if (_playing) { clearInterval(_iv); _playing = false; } gotoScene(-1); }
+  else if (e.code === 'ArrowUp') { e.preventDefault(); _f = Math.min(_f + 1, totalFrames - 1); renderFrame(_f); }
+  else if (e.code === 'ArrowDown') { e.preventDefault(); _f = Math.max(_f - 1, 0); renderFrame(_f); }
+  else if (e.code === 'Home') { _f = 0; renderFrame(_f); }
+  else if (e.code === 'End') { _f = totalFrames - 1; renderFrame(_f); }
+});
+renderFrame(0);
+</script>
+</body>
+</html>

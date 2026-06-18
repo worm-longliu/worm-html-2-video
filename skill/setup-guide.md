@@ -220,9 +220,9 @@ echo ==========================================
 echo.
 echo 下一步（脚本驱动流程）:
 echo   1. npx worm-html-2-video init  生成 script.json（场景+字幕+配音文案）
-echo   2. npx worm-html-2-video script html   生成 video.html 骨架
+echo   2. npx worm-html-2-video script html   生成 scenes/ 多文件骨架（每场景一个 HTML）
 echo   3. npx worm-html-2-video voiceover     按场景配音+记录时长
-echo   4. npx worm-html-2-video sync          据时长调整 video.html
+echo   4. npx worm-html-2-video sync          据时长调整 scenes/ 各场景 HTML
 echo   5. npx worm-html-2-video capture       截图
 echo   6. npx worm-html-2-video generate      合成 video_final.mp4
 pause

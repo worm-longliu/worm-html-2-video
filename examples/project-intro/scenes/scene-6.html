@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<title>worm-html-2-video 项目介绍 - 场景6</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg-0: #0B0E1A; --bg-1: #161B30;
+  --amber: #FFB347; --amber-bright: #FFD56B;
+  --cyan: #5EE7FF; --red: #FF5C7A;
+  --text: #F5F7FF; --text-sub: #C9D2F0; --text-dim: #AEB8D8;
+  --glass: rgba(255,255,255,0.05); --glass-border: rgba(255,255,255,0.14);
+}
+body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
+  background: radial-gradient(ellipse at 50% 20%, #1A1428 0%, #0B0E1A 70%);
+  font-family: "Noto Sans SC","Microsoft YaHei",sans-serif; -webkit-font-smoothing: antialiased; }
+.bg-noise { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E"); }
+.scene { position: absolute; inset: 0; padding: 140px 70px 280px; display: flex; flex-direction: column; z-index: 1; }
+.anim { opacity: 0; transform: translateY(30px); }
+.eyebrow { font-family: "Bricolage Grotesque",sans-serif; font-size: 26px; font-weight: 600;
+  letter-spacing: 0.35em; color: var(--amber); text-transform: uppercase; margin-bottom: 20px; }
+.s6-title { font-family: "Bricolage Grotesque","Noto Sans SC",sans-serif; font-size: 60px; font-weight: 800;
+  line-height: 1.15; color: var(--text); margin-bottom: 40px; }
+.table { display: flex; flex-direction: column; border-radius: 22px; overflow: hidden;
+  border: 1px solid var(--glass-border); backdrop-filter: blur(12px); }
+.row { display: grid; grid-template-columns: 1.2fr 1fr 1fr; align-items: center; padding: 26px 28px; }
+.row.head { background: rgba(255,255,255,0.06); font-family: "Bricolage Grotesque",sans-serif;
+  font-size: 24px; font-weight: 700; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+.row.head .col-old { color: var(--red); }
+.row.head .col-new { color: var(--amber-bright); }
+.row + .row { border-top: 1px solid var(--glass-border); }
+.col-label { font-size: 32px; font-weight: 600; color: var(--text-sub); }
+.col-old { font-size: 30px; color: var(--red); font-weight: 600; }
+.col-new { font-size: 30px; color: var(--amber-bright); font-weight: 700; }
+.big { margin-top: 44px; display: flex; align-items: center; justify-content: center; gap: 30px; }
+.big-num { font-family: "Bricolage Grotesque",sans-serif; font-size: 140px; font-weight: 800; line-height: 1; }
+.big-num.old { color: var(--red); text-decoration: line-through; text-decoration-thickness: 8px; }
+.big-num.new { color: var(--amber-bright); text-shadow: 0 0 40px rgba(255,213,107,0.5); }
+.big-arrow { font-family: "Bricolage Grotesque",sans-serif; font-size: 80px; color: var(--cyan); }
+.big-unit { font-size: 40px; color: var(--text-dim); }
+.subtitle-bar { position: absolute; left: 60px; right: 60px; bottom: 100px; min-height: 80px;
+  padding: 22px 36px; background: rgba(0,0,0,0.78); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border); border-radius: 18px; color: #FFFFFF; font-size: 44px; font-weight: 600;
+  line-height: 1.4; text-align: center; z-index: 9999; opacity: 0; transition: opacity 0.12s linear;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+  white-space: pre-line; word-break: break-word; }
+.debug-hint { position: absolute; top: 12px; left: 12px; z-index: 10000; font-size: 20px; color: var(--cyan);
+  background: rgba(0,0,0,0.5); padding: 6px 12px; border-radius: 8px; pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="debug-hint">场景 6/8 | ← → 切换 | 空格播放配音</div>
+<div class="bg-noise"></div>
+<div id="subtitle-bar" class="subtitle-bar"></div>
+<audio id="vo" src="voiceover_scene_6.mp3" preload="auto"></audio>
+<div id="scene-6" class="scene" data-duration="12.456">
+  <div class="anim eyebrow" data-delay="0" data-dur="0.5">COMPARISON</div>
+  <div class="anim s6-title" data-delay="0.4" data-dur="0.6">效率对比</div>
+  <div class="anim table" data-delay="0.9" data-dur="0.5">
+    <div class="row head"><span>维度</span><span class="col-old">传统方案</span><span class="col-new">本方案</span></div>
+    <div class="row"><span class="col-label">学习成本</span><span class="col-old">几个月</span><span class="col-new">会写网页就行</span></div>
+    <div class="row"><span class="col-label">制作周期</span><span class="col-old">3 天</span><span class="col-new">3 分钟</span></div>
+    <div class="row"><span class="col-label">工具链</span><span class="col-old">AE + PR + 插件</span><span class="col-new">HTML + CLI</span></div>
+  </div>
+  <div class="anim big" data-delay="2.2" data-dur="0.6">
+    <span class="big-num old">3<span class="big-unit">天</span></span>
+    <span class="big-arrow">→</span>
+    <span class="big-num new">3<span class="big-unit">分钟</span></span>
+  </div>
+</div>
+<script>
+const FPS = 30;
+const SCENE_FADE_FRAMES = 8;
+const SCENE_ID = 6;
+const SCENE_TOTAL = 8;
+const SUBTITLES = [
+  { "start": 0.3, "end": 4.0, "text": "传统方案学 AE 要几个月" },
+  { "start": 4.0, "end": 7.5, "text": "本方案会写网页就行" },
+  { "start": 7.5, "end": 10.5, "text": "传统 3 天 本方案 3 分钟" },
+  { "start": 10.5, "end": 12.2, "text": "不如 HTML 加 CLI" }
+];
+const subtitleBar = document.getElementById('subtitle-bar');
+let _lastSub = null;
+function updateSubtitle(time) {
+  let active = null;
+  for (const sub of SUBTITLES) { if (time >= sub.start && time < sub.end) { active = sub; break; } }
+  if (active) {
+    if (active.text !== _lastSub) { subtitleBar.textContent = active.text; _lastSub = active.text; }
+    if (subtitleBar.style.opacity !== '1') subtitleBar.style.opacity = '1';
+  } else { if (subtitleBar.style.opacity !== '0') subtitleBar.style.opacity = '0'; }
+}
+const sceneEl = document.querySelector('.scene');
+const totalFrames = Math.round(parseFloat(sceneEl.dataset.duration) * FPS);
+function easeOut(t) { return 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3); }
+function renderFrame(frame) {
+  updateSubtitle(frame / FPS);
+  let op = 1;
+  if (frame < SCENE_FADE_FRAMES) op = easeOut(frame / SCENE_FADE_FRAMES);
+  else if (frame > totalFrames - SCENE_FADE_FRAMES) op = easeOut((totalFrames - frame) / SCENE_FADE_FRAMES);
+  sceneEl.style.opacity = op;
+  sceneEl.querySelectorAll('.anim').forEach(an => {
+    const dly = Math.round(parseFloat(an.dataset.delay) * FPS);
+    const du = Math.round(parseFloat(an.dataset.dur) * FPS);
+    if (frame < dly) { an.style.opacity = '0'; an.style.transform = 'translateY(30px)'; }
+    else if (frame < dly + du) { const p = (frame - dly) / du; const e = easeOut(p); an.style.opacity = e; an.style.transform = 'translateY(' + (30*(1-e)) + 'px)'; }
+    else { an.style.opacity = '1'; an.style.transform = 'translateY(0)'; }
+  });
+}
+window.__hyperframes = {
+  getTotalFrames: () => totalFrames,
+  getSceneCount: () => 1,
+  getSceneDuration: () => parseFloat(sceneEl.dataset.duration),
+  gotoFrame: (frame) => renderFrame(Math.max(0, Math.min(frame, totalFrames - 1)))
+};
+function gotoScene(delta) {
+  const next = SCENE_ID + delta;
+  if (next < 1 || next > SCENE_TOTAL) return;
+  location.href = 'scene-' + next + '.html';
+}
+let _f = 0; let _playing = false; let _iv = null;
+const vo = document.getElementById('vo');
+function playPreview() {
+  if (_playing) { clearInterval(_iv); _playing = false; vo.pause(); return; }
+  _playing = true; _f = 0;
+  vo.currentTime = 0; vo.play().catch(function(){});
+  _iv = setInterval(function () { _f = _f + 1; if (_f >= totalFrames) { clearInterval(_iv); _playing = false; gotoScene(1); return; } renderFrame(_f); }, 1000 / FPS);
+}
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') { e.preventDefault(); playPreview(); }
+  else if (e.code === 'ArrowRight') { if (_playing) { clearInterval(_iv); _playing = false; } gotoScene(1); }
+  else if (e.code === 'ArrowLeft') { if (_playing) { clearInterval(_iv); _playing = false; } gotoScene(-1); }
+  else if (e.code === 'ArrowUp') { e.preventDefault(); _f = Math.min(_f + 1, totalFrames - 1); renderFrame(_f); }
+  else if (e.code === 'ArrowDown') { e.preventDefault(); _f = Math.max(_f - 1, 0); renderFrame(_f); }
+  else if (e.code === 'Home') { _f = 0; renderFrame(_f); }
+  else if (e.code === 'End') { _f = totalFrames - 1; renderFrame(_f); }
+});
+renderFrame(0);
+</script>
+</body>
+</html>

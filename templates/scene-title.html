@@ -1,5 +1,5 @@
 <!-- 标题场景模板 — 用于视频开场 -->
-<!-- 使用方式：复制到 HTML 页面中，修改文字内容 -->
+<!-- 使用方式：复制到 scenes/scene-N.html 的场景内容区（__SCENE_CONTENT__ 位置），修改文字内容 -->
 
 <!-- CSS（合并到 <style> 中） -->
 <!--
@@ -35,8 +35,8 @@
 -->
 
 <!-- HTML -->
-<!-- 字幕数据: 直接写入 video.html 的 SUBTITLES 数组,截图时自动捕获
-     文本与 voiceover_text.txt 文案对齐, 格式 { start, end, text }
+<!-- 字幕数据: 写入 scenes/scene-N.html 的 SUBTITLES 数组(局部 0 起算时间轴),截图时自动捕获
+     文本与 voiceover_text.txt 文案对齐, 格式 { start, end, text }(start/end 为该场景内秒数)
      例如: { start: 0.3, end: 3.7, text: "标题文案" } -->
 <div id="scene-title" class="scene" data-duration="4">
   <div class="anim title-ring" data-delay="0" data-dur="0.5">

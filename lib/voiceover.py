@@ -160,6 +160,12 @@ async def generate_voiceover(script, voice, rate, scene_gap, out_mp3, out_timing
             if dur <= 0:
                 dur = 0.5
             parts.append(scene_mp3)
+            # Persist this scene's mp3 into scenes/ so each scene HTML can
+            # embed it (<audio src="voiceover_scene_N.mp3">) for debug preview.
+            scenes_audio_dir = os.path.join(os.path.dirname(os.path.abspath(out_mp3)), 'scenes')
+            os.makedirs(scenes_audio_dir, exist_ok=True)
+            import shutil as _shutil
+            _shutil.copyfile(scene_mp3, os.path.join(scenes_audio_dir, f'voiceover_scene_{sid}.mp3'))
             start = cursor
             end = cursor + dur
             timings['scenes'].append({

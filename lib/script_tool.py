@@ -8,7 +8,7 @@ script.json 是项目的唯一权威数据源,包含场景规划、字幕文本�
 1. 校验 script.json 结构
 2. 派生 voiceover_text.txt(向后兼容,供人工阅读)
 3. 派生 script.md(分镜脚本,供人工审核)
-4. 生成 video.html 骨架(字幕条 + SUBTITLES 占位 + data-duration 初值)
+4. 生成 scenes/ 多文件(每场景一个 HTML + index.html 导航,嵌入该场景配音供调试预览)
 
 Usage:
     python lib/script_tool.py validate  [--script <path>]
@@ -158,42 +158,38 @@ def _estimate_durations(script):
         char_count = len([c for c in text if not c.isspace()])
         durs.append(max(EST_MIN_SCENE, char_count / EST_CHARS_PER_SECOND + EST_BUFFER))
     return durs
-def _build_subtitle_array(script, durations):
-    """Build SUBTITLES array entries with start/end computed from durations.
+SCENE_GAP = 0.3
+MAX_SUB_DURATION = 5.0
 
-    Each scene's subtitle occupies [scene_start + SCENE_GAP, scene_end - SCENE_GAP].
-    If subtitle text is long, it is split into multiple entries (<=MAX_DURATION).
+
+def _build_scene_subtitles(scene, dur):
+    """Build SUBTITLES entries for a single scene on a LOCAL timeline (0-based).
+
+    The scene subtitle window is [SCENE_GAP, dur - SCENE_GAP]. Multi-line
+    subtitles (split by \n) are time-shared evenly within the window.
     """
-    gap = 0.3
-    max_dur = 5.0
     entries = []
-    cursor = 0.0
-    for idx, scene in enumerate(script['scenes']):
-        dur = durations[idx]
-        start = cursor + gap
-        end = cursor + dur - gap
-        text = str(scene['subtitle']).strip()
-        # split long subtitles by explicit \n lines, then group to <= max_dur
-        lines = [ln for ln in text.split('\n') if ln.strip()]
-        if not lines:
-            lines = [text]
-        # naive: each line becomes one subtitle entry, time-shared within scene window
-        available = max(max_dur, end - start)
-        per = available / len(lines)
-        for j, ln in enumerate(lines):
-            s = start + j * per
-            e = min(start + (j + 1) * per, end)
-            entries.append({'start': round(s, 2), 'end': round(e, 2), 'text': ln})
-        cursor += dur
+    start = SCENE_GAP
+    end = dur - SCENE_GAP
+    if end <= start:
+        end = start + 0.1
+    text = str(scene.get('subtitle', '')).strip()
+    lines = [ln for ln in text.split('\n') if ln.strip()] or [text]
+    available = end - start
+    per = max(1.0, min(MAX_SUB_DURATION, available / len(lines)))
+    for j, ln in enumerate(lines):
+        s = start + j * per
+        e = min(start + (j + 1) * per, end)
+        entries.append({'start': round(s, 2), 'end': round(e, 2), 'text': ln})
     return entries
 
 
-HTML_TEMPLATE = '''<!DOCTYPE html>
+SCENE_HTML_TEMPLATE = '''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1080, height=1920">
-<title>__TITLE__</title>
+<title>__TITLE__ - 场景__SID__</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -203,7 +199,7 @@ body {
 }
 .scene {
   position: absolute; top: 0; left: 0;
-  width: 1080px; height: 1920px; opacity: 0;
+  width: 1080px; height: 1920px; opacity: 1;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
 .anim { opacity: 0; transform: translateY(30px); }
@@ -220,14 +216,25 @@ body {
   white-space: pre-line; word-break: break-word; box-sizing: border-box;
   transition: opacity 0.12s linear;
 }
+.debug-hint {
+  position: absolute; top: 12px; left: 12px; z-index: 10000;
+  font-size: 20px; color: #00ff88; background: rgba(0,0,0,0.5);
+  padding: 6px 12px; border-radius: 8px; pointer-events: none;
+}
 </style>
 </head>
 <body>
+<div class="debug-hint">场景 __SID__/__TOTAL__ | ← → 切换 | 空格播放配音</div>
 <div id="subtitle-bar" class="subtitle-bar"></div>
-__SCENES__
+<audio id="vo" src="voiceover_scene___SID__.mp3" preload="auto"></audio>
+<div id="scene-__SID__" class="scene" data-duration="__DUR__">
+__SCENE_CONTENT__
+</div>
 <script>
 const FPS = 30;
 const SCENE_FADE_FRAMES = 8;
+const SCENE_ID = __SID__;
+const SCENE_TOTAL = __TOTAL__;
 const SUBTITLES = __SUBTITLES__;
 const subtitleBar = document.getElementById('subtitle-bar');
 let _lastSub = null;
@@ -239,47 +246,52 @@ function updateSubtitle(time) {
     if (subtitleBar.style.opacity !== '1') subtitleBar.style.opacity = '1';
   } else { if (subtitleBar.style.opacity !== '0') subtitleBar.style.opacity = '0'; }
 }
-const scenes = Array.from(document.querySelectorAll('.scene'));
-const totalFrames = scenes.reduce((s, el) => s + Math.round(parseFloat(el.dataset.duration) * FPS), 0);
-const sceneFrames = []; let _off = 0;
-scenes.forEach((sc, i) => {
-  const d = parseFloat(sc.dataset.duration); const f = Math.round(d * FPS);
-  sceneFrames.push({ start: _off, end: _off + f, index: i }); _off += f;
-});
+const sceneEl = document.querySelector('.scene');
+const totalFrames = Math.round(parseFloat(sceneEl.dataset.duration) * FPS);
 function easeOut(t) { return 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3); }
 function renderFrame(frame) {
   updateSubtitle(frame / FPS);
-  let info = null;
-  for (const sf of sceneFrames) { if (frame >= sf.start && frame < sf.end) { info = sf; break; } }
-  if (!info) return;
-  const localFrame = frame - info.start;
-  const total = info.end - info.start;
+  const localFrame = frame;
+  const total = totalFrames;
   let op = 1;
   if (localFrame < SCENE_FADE_FRAMES) op = easeOut(localFrame / SCENE_FADE_FRAMES);
   else if (localFrame > total - SCENE_FADE_FRAMES) op = easeOut((total - localFrame) / SCENE_FADE_FRAMES);
-  scenes.forEach((s, i) => { if (i === info.index) { s.style.opacity = op; s.style.zIndex = '100'; } else { s.style.opacity = '0'; s.style.zIndex = '0'; } });
-  info && scenes[info.index].querySelectorAll('.anim').forEach(an => {
+  sceneEl.style.opacity = op;
+  sceneEl.querySelectorAll('.anim').forEach(an => {
     const dly = Math.round(parseFloat(an.dataset.delay) * FPS);
     const du = Math.round(parseFloat(an.dataset.dur) * FPS);
     if (localFrame < dly) { an.style.opacity = '0'; an.style.transform = 'translateY(30px)'; }
-    else if (localFrame < dly + du) { const p = (localFrame - dly) / du; const e = easeOut(p); an.style.opacity = e; an.style.transform = `translateY(${30*(1-e)}px)`; }
+    else if (localFrame < dly + du) { const p = (localFrame - dly) / du; const e = easeOut(p); an.style.opacity = e; an.style.transform = 'translateY(' + (30*(1-e)) + 'px)'; }
     else { an.style.opacity = '1'; an.style.transform = 'translateY(0)'; }
   });
 }
 window.__hyperframes = {
   getTotalFrames: () => totalFrames,
-  getSceneCount: () => scenes.length,
-  getSceneDuration: (i) => parseFloat(scenes[i].dataset.duration),
+  getSceneCount: () => 1,
+  getSceneDuration: () => parseFloat(sceneEl.dataset.duration),
   gotoFrame: (frame) => renderFrame(Math.max(0, Math.min(frame, totalFrames - 1)))
 };
+function gotoScene(delta) {
+  const next = SCENE_ID + delta;
+  if (next < 1 || next > SCENE_TOTAL) return;
+  location.href = 'scene-' + next + '.html';
+}
 let _f = 0; let _playing = false; let _iv = null;
+const vo = document.getElementById('vo');
+function playPreview() {
+  if (_playing) { clearInterval(_iv); _playing = false; vo.pause(); return; }
+  _playing = true; _f = 0;
+  vo.currentTime = 0; vo.play().catch(function(){});
+  _iv = setInterval(function () { _f = _f + 1; if (_f >= totalFrames) { clearInterval(_iv); _playing = false; gotoScene(1); return; } renderFrame(_f); }, 1000 / FPS);
+}
 document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space') { e.preventDefault(); if (_playing) { clearInterval(_iv); _playing = false; } else { _playing = true; _iv = setInterval(() => { _f = (_f + 1) % totalFrames; renderFrame(_f); }, 1000 / FPS); } }
-  else if (e.code === 'ArrowRight') { _f = Math.min(_f + 1, totalFrames - 1); renderFrame(_f); }
-  else if (e.code === 'ArrowLeft') { _f = Math.max(_f - 1, 0); renderFrame(_f); }
+  if (e.code === 'Space') { e.preventDefault(); playPreview(); }
+  else if (e.code === 'ArrowRight') { if (_playing) { clearInterval(_iv); _playing = false; } gotoScene(1); }
+  else if (e.code === 'ArrowLeft') { if (_playing) { clearInterval(_iv); _playing = false; } gotoScene(-1); }
+  else if (e.code === 'ArrowUp') { e.preventDefault(); _f = Math.min(_f + 1, totalFrames - 1); renderFrame(_f); }
+  else if (e.code === 'ArrowDown') { e.preventDefault(); _f = Math.max(_f - 1, 0); renderFrame(_f); }
   else if (e.code === 'Home') { _f = 0; renderFrame(_f); }
   else if (e.code === 'End') { _f = totalFrames - 1; renderFrame(_f); }
-  else if (e.key >= '1' && e.key <= '9') { const idx = parseInt(e.key) - 1; if (idx < sceneFrames.length) { _f = sceneFrames[idx].start; renderFrame(_f); } }
 });
 renderFrame(0);
 </script>
@@ -288,29 +300,98 @@ renderFrame(0);
 '''
 
 
-def build_html(script):
-    """Generate a video.html skeleton from script.json with estimated durations."""
+INDEX_HTML_TEMPLATE = '''<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<title>__TITLE__ - 场景导航</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1080px; height: 1920px; overflow: hidden;
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  background: #0f0c29; color: #fff; -webkit-font-smoothing: antialiased;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+h1 { font-size: 56px; margin-bottom: 30px; }
+.hint { font-size: 28px; color: #00ff88; margin-bottom: 40px; text-align: center; line-height: 1.6; }
+ol { font-size: 36px; line-height: 2; list-style: none; }
+ol a { color: #fff; text-decoration: none; }
+ol a:hover { color: #00ff88; }
+</style>
+</head>
+<body>
+<h1>__TITLE__</h1>
+<div class="hint">← → 切换场景 | 空格从首场景开始播放配音预览<br>共 __TOTAL__ 个场景</div>
+<ol>__SCENE_LINKS__</ol>
+<script>
+const TOTAL = __TOTAL__;
+function gotoScene(i) { if (i < 1 || i > TOTAL) return; location.href = 'scene-' + i + '.html'; }
+let _cur = 1;
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'ArrowRight') { _cur = Math.min(_cur + 1, TOTAL); }
+  else if (e.code === 'ArrowLeft') { _cur = Math.max(_cur - 1, 1); }
+  else if (e.code === 'Space') { e.preventDefault(); gotoScene(1); return; }
+  else if (e.key >= '1' && e.key <= '9') { gotoScene(parseInt(e.key)); return; }
+  else return;
+  gotoScene(_cur);
+});
+</script>
+</body>
+</html>
+'''
+
+
+def _scene_content_tag(scene):
+    """Build the inner HTML for one scene (title + subtitle anim elements)."""
+    sid = scene.get('id')
+    name = scene.get('name', f'场景{sid}')
+    sub_text = str(scene.get('subtitle', '')).strip().split('\n')[0]
+    return (
+        f'  <div class="anim scene-title" data-delay="0" data-dur="0.6">{name}</div>\n'
+        f'  <div class="anim scene-sub" data-delay="0.4" data-dur="0.6">{sub_text}</div>'
+    )
+
+
+def build_scenes_dir(script, out_dir=None):
+    """Generate scenes/scene-N.html (one per scene) + scenes/index.html.
+
+    Each scene HTML uses a LOCAL timeline (0-based) and embeds its own
+    voiceover (<audio src="voiceover_scene_N.mp3">) for debug preview.
+    ArrowLeft/ArrowRight jump to the neighbouring scene file; Space plays
+    the voiceover and auto-advances when it finishes.
+    """
     durations = _estimate_durations(script)
     title = script.get('title', 'My Video')
-    scene_tags = []
+    base = out_dir or os.path.join(os.getcwd(), 'scenes')
+    os.makedirs(base, exist_ok=True)
+    total = len(script['scenes'])
     for idx, scene in enumerate(script['scenes']):
         sid = scene.get('id', idx + 1)
-        name = scene.get('name', f'场景{sid}')
         dur = round(durations[idx], 1)
-        # two anim elements: a title (scene name) and a subtitle line (first subtitle line)
-        sub_text = str(scene['subtitle']).strip().split('\n')[0]
-        scene_tags.append(
-            f'<div id="scene-{sid}" class="scene" data-duration="{dur}">\n'
-            f'  <div class="anim scene-title" data-delay="0" data-dur="0.6">{name}</div>\n'
-            f'  <div class="anim scene-sub" data-delay="0.4" data-dur="0.6">{sub_text}</div>\n'
-            f'</div>'
-        )
-    subs = _build_subtitle_array(script, durations)
-    subs_js = json.dumps(subs, ensure_ascii=False, indent=2)
-    html = HTML_TEMPLATE.replace('__TITLE__', title) \
-        .replace('__SCENES__', '\n'.join(scene_tags)) \
-        .replace('__SUBTITLES__', subs_js)
-    return html
+        subs = _build_scene_subtitles(scene, dur)
+        subs_js = json.dumps(subs, ensure_ascii=False, indent=2)
+        html = (SCENE_HTML_TEMPLATE
+                .replace('__TITLE__', title)
+                .replace('__SID__', str(sid))
+                .replace('__TOTAL__', str(total))
+                .replace('__DUR__', str(dur))
+                .replace('__SCENE_CONTENT__', _scene_content_tag(scene))
+                .replace('__SUBTITLES__', subs_js))
+        with open(os.path.join(base, f'scene-{sid}.html'), 'w', encoding='utf-8') as f:
+            f.write(html)
+    links = '\n'.join(
+        f'<li><a href="scene-{scene.get("id", i + 1)}.html">场景 {scene.get("id", i + 1)}: {scene.get("name", "")}</a></li>'
+        for i, scene in enumerate(script['scenes'])
+    )
+    index_html = (INDEX_HTML_TEMPLATE
+                  .replace('__TITLE__', title)
+                  .replace('__TOTAL__', str(total))
+                  .replace('__SCENE_LINKS__', links))
+    with open(os.path.join(base, 'index.html'), 'w', encoding='utf-8') as f:
+        f.write(index_html)
+    return base
 
 
 def main():
@@ -344,12 +425,14 @@ def main():
         print(f"✅ script.md derived: {out}")
 
     if opts['command'] == 'html':
-        out = opts['output'] or os.path.join(os.getcwd(), 'video.html')
-        html = build_html(script)
-        with open(out, 'w', encoding='utf-8') as f:
-            f.write(html)
-        print(f"✅ video.html skeleton generated: {out}")
-        print("   人工审核/调整场景内容后,运行 voiceover → sync → capture → generate")
+        # Multi-file mode: one HTML per scene under scenes/ + an index.html.
+        # --output selects the scenes directory (default: ./scenes).
+        out_dir = opts['output'] or os.path.join(os.getcwd(), 'scenes')
+        base = build_scenes_dir(script, out_dir)
+        n = len(script['scenes'])
+        print(f"✅ Generated {n} scene HTML files + index.html under: {base}")
+        print("   用浏览器打开 scenes/index.html 调试: ← → 切换场景, 空格播放配音预览")
+        print("   人工审核/调整各场景内容后,运行 voiceover → sync → capture → generate")
 
 
 if __name__ == '__main__':

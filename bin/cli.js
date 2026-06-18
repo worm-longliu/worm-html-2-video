@@ -4,9 +4,9 @@
  *
  * New script-driven workflow (with human review gates):
  *   1. script   — author/review script.json (scenes + subtitles + voiceover)
- *   2. html     — generate video.html skeleton from script.json → review/adjust
+ *   2. html     — generate scenes/ (one HTML per scene) from script.json → review/adjust
  *   3. voiceover— synthesize per-scene voiceover, record each scene's duration
- *   4. sync     — adjust video.html durations + subtitles to real voiceover
+ *   4. sync     — adjust scenes/ durations + subtitles to real voiceover
  *   5. capture  — Playwright frame capture → video_html.mp4
  *   6. generate — merge voiceover → video_final.mp4
  *
@@ -17,7 +17,7 @@
  *   init       Scaffold a new video project (script.json) in the cwd
  *   script     Run script_tool.py: validate | vo | doc | html
  *   voiceover  Synthesize voiceover.mp3 + scene_timings.json (per scene)
- *   sync       Adjust video.html durations/subtitles to voiceover timings
+ *   sync       Adjust scenes/ durations/subtitles to voiceover timings
  *   capture    Run Playwright screenshot capture (→ video_html.mp4)
  *   generate   Merge voiceover into final video (→ video_final.mp4)
  *   install-skill  Copy bundled skill/ into the local Codex skills directory
@@ -48,16 +48,16 @@ Commands (new workflow, each step is a human review gate):
   script      script_tool.py subcommand: validate | vo | doc | html
               e.g. npx worm-html-2-video script html
   voiceover   Synthesize per-scene voiceover → voiceover.mp3 + scene_timings.json
-  sync        Adjust video.html data-duration & SUBTITLES to real voiceover
+  sync        Adjust scenes/ data-duration & SUBTITLES to real voiceover
   capture     Playwright frame capture → video_html.mp4
   generate    Merge voiceover → video_final.mp4
   install-skill  Copy the bundled skill/ into the local Codex skills directory
 
 Full workflow:
   1. edit script.json            (scenes + subtitles + voiceover)  ★ review
-  2. npx worm-html-2-video script html   → video.html              ★ review
+  2. npx worm-html-2-video script html   → scenes/ (per-scene HTML)             ★ review
   3. npx worm-html-2-video voiceover     → voiceover.mp3 + timings
-  4. npx worm-html-2-video sync          → adjust video.html
+  4. npx worm-html-2-video sync          → adjust scenes/
   5. npx worm-html-2-video capture       → video_html.mp4
   6. npx worm-html-2-video generate      → video_final.mp4
 
@@ -125,11 +125,11 @@ function cmdInit() {
   }
   console.log('\n📋 Next steps (script-driven workflow):');
   console.log('   1. Edit script.json — scenes, subtitles, voiceover  ★ review');
-  console.log('   2. npx worm-html-2-video script html   → video.html  ★ review');
+  console.log('   2. npx worm-html-2-video script html   → scenes/ (per-scene HTML)  ★ review');
   console.log('      (Gitee: node bin/cli.js script html)');
   console.log('   3. npx worm-html-2-video voiceover     → voiceover.mp3 + scene_timings.json');
   console.log('      (Gitee: node bin/cli.js voiceover)');
-  console.log('   4. npx worm-html-2-video sync          → adjust video.html to voiceover');
+  console.log('   4. npx worm-html-2-video sync          → adjust scenes/ to voiceover');
   console.log('      (Gitee: node bin/cli.js sync)');
   console.log('   5. npx worm-html-2-video capture       → video_html.mp4');
   console.log('      (Gitee: node bin/cli.js capture)');

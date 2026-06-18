@@ -11,7 +11,7 @@
    npx worm-html-2-video init  然后 编辑 script.json
    可派生: npx worm-html-2-video script doc  → script.md（分镜脚本，便于审核）
 
-2. 生成 HTML 骨架 → video.html（字幕条+SUBTITLES占位+data-duration初值）  ★人工审核/调整
+2. 生成 scenes/ 多文件骨架 → 每场景一个 HTML + index.html（字幕条+SUBTITLES占位+data-duration初值）  ★人工审核/调整
    npx worm-html-2-video script html
    人工调整场景视觉与动画
 
@@ -19,7 +19,7 @@
    npx worm-html-2-video voiceover
    （每场景单独 Edge-TTS，ffprobe 测真实时长，ffmpeg concat 拼接）
 
-4. 据配音时长自动调整 video.html（data-duration + SUBTITLES 时间轴）
+4. 据配音时长自动调整 scenes/ 各场景 HTML（data-duration + 局部 SUBTITLES 时间轴）
    npx worm-html-2-video sync
    （读取 scene_timings.json，把每个场景显示时长设为该场景配音时长）
 
@@ -31,7 +31,7 @@
 `
 
 核心：时长不再人工估算。script.json 不含时间，voiceover.py 测出每场景
-真实配音时长，sync_html.py 据此回填 video.html，保证音画精确对齐。
+真实配音时长，sync_html.py 据此回填 scenes/ 各场景 HTML，保证音画精确对齐。
 
 ---
 
@@ -40,11 +40,11 @@
 `
 script.json（场景+字幕+配音文案）
     ↓ script_tool.py html
-video.html（字幕条+SUBTITLES占位+data-duration初值）
+scenes/（每场景一个 HTML，字幕条+SUBTITLES占位+data-duration初值）
     ↓ voiceover.py（按场景Edge-TTS + ffprobe测时长）
 voiceover.mp3 + scene_timings.json
     ↓ sync_html.py（据时长更新 data-duration 与 SUBTITLES）
-video.html（时长已对齐配音）
+scenes/（各场景时长已对齐配音）
     ↓ capture.mjs（Playwright 逐帧截图，字幕随帧捕获）
 frames/ + video_html.mp4
     ↓ generate_video.py（复用 voiceover.mp3 合并，无字幕烧录）
