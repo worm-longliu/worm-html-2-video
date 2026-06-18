@@ -80,7 +80,7 @@ sync_html.py 据此回填 scenes/ 各场景 HTML 的 data-duration 与局部 SUB
    ├── npx worm-html-2-video script html
    ├── 字幕条 DOM 已内置，SUBTITLES 数组按估算时长生成
    ├── 人工调整场景视觉与动画（帧驱动系统与预览已内置）
-   └── ★精美化：骨架仅是可读起点，要达到精美效果请参考 [visual-design.md](./visual-design.md)（CSS 变量、字体、氛围层、几何 mark、配色策略）
+   └── ★已默认精美：骨架开箱即精美（CSS 变量配色、字体、氛围层、逐场景配色递进）；进阶定制（几何 mark、自定义配色）见 [visual-design.md](./visual-design.md)
 
 3. 按场景生成配音 → voiceover.mp3 + scene_timings.json（每场景真实时长）
    ├── npx worm-html-2-video voiceover

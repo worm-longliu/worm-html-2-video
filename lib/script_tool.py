@@ -34,6 +34,15 @@ DEFAULT_FPS = 30
 EST_CHARS_PER_SECOND = 4.5
 EST_MIN_SCENE = 3.0
 EST_BUFFER = 1.0
+# 精美骨架的逐场景配色递进（红→青→紫→琥珀→绿，循环复用）
+# 每套配色含主色/亮色/深色/暖辅色，对应 visual-design.md 的逐场景配色策略
+SCENE_PALETTES = [
+    {'name': 'red',   'main': '#FF5C7A', 'bright': '#FF8FA3', 'deep': '#E63950', 'warm': '#FFB347'},
+    {'name': 'cyan',  'main': '#5EE7FF', 'bright': '#9AF1FF', 'deep': '#2BC7E8', 'warm': '#FFB347'},
+    {'name': 'violet','main': '#B14DFF', 'bright': '#CB85FF', 'deep': '#8A2BE2', 'warm': '#5EE7FF'},
+    {'name': 'amber', 'main': '#FFB347', 'bright': '#FFD56B', 'deep': '#E69500', 'warm': '#5EE7FF'},
+    {'name': 'green', 'main': '#00FF88', 'bright': '#5FFFB0', 'deep': '#00CC6A', 'warm': '#5EE7FF'},
+]
 
 
 def parse_args():
@@ -191,40 +200,82 @@ SCENE_HTML_TEMPLATE = '''<!DOCTYPE html>
 <meta name="viewport" content="width=1080, height=1920">
 <title>__TITLE__ - 场景__SID__</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --text: #FFFFFF; --text-sub: #E8E8F0; --text-dim: #9AA0B4;
+  --c-main: __C_MAIN__; --c-bright: __C_BRIGHT__; --c-deep: __C_DEEP__; --c-warm: __C_WARM__;
+  --glass: rgba(255,255,255,0.05); --glass-border: rgba(255,255,255,0.14);
+}
 body {
   width: 1080px; height: 1920px; overflow: hidden;
-  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
-  background: #0f0c29; -webkit-font-smoothing: antialiased;
+  font-family: "Noto Sans SC","Microsoft YaHei",sans-serif;
+  background: radial-gradient(ellipse at 50% 30%, __BG_INNER__ 0%, #0E1226 55%, #070912 100%);
+  -webkit-font-smoothing: antialiased;
 }
+.bg-noise { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.05;
+  background-image: radial-gradient(rgba(255,255,255,0.15) 0.5px, transparent 0.5px);
+  background-size: 3px 3px; }
+.glow { position: absolute; border-radius: 50%; filter: blur(100px);
+  z-index: 0; pointer-events: none; }
+.glow.main { width: 560px; height: 560px; background: var(--c-main);
+  top: 8%; left: -140px; opacity: 0.34; }
+.glow.warm { width: 420px; height: 420px; background: var(--c-warm);
+  bottom: 16%; right: -120px; opacity: 0.20; }
 .scene {
   position: absolute; top: 0; left: 0;
-  width: 1080px; height: 1920px; opacity: 1;
+  width: 1080px; height: 1920px; opacity: 1; z-index: 1;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 0 60px;
 }
 .anim { opacity: 0; transform: translateY(30px); }
-.scene-title { font-size: 72px; color: #ffffff; font-weight: bold; text-align: center; line-height: 1.5; }
-.scene-sub { font-size: 36px; color: #e6e6e6; margin-top: 40px; text-align: center; }
-.highlight { color: #00ff88; font-weight: bold; }
+.eyebrow {
+  font-family: "Bricolage Grotesque",sans-serif; font-size: 30px; font-weight: 600;
+  letter-spacing: 0.4em; color: var(--c-bright); text-transform: uppercase;
+  margin-bottom: 30px; padding: 8px 28px;
+  border: 1px solid __C_BRIGHT_ALPHA__; border-radius: 999px;
+  background: __C_BRIGHT_ALPHA08__;
+}
+.scene-title {
+  font-family: "Bricolage Grotesque","Noto Sans SC",sans-serif;
+  font-size: 84px; font-weight: 800; color: #FFFFFF; text-align: center;
+  line-height: 1.18; margin-bottom: 32px; max-width: 900px;
+}
+.scene-title .hl { color: var(--c-bright); text-shadow: 0 0 28px __C_MAIN_ALPHA50__; }
+.scene-sub {
+  font-size: 36px; font-weight: 500; color: var(--text-sub); text-align: center;
+  line-height: 1.55; max-width: 880px;
+}
+.scene-sub .mono { font-family: "JetBrains Mono",monospace; color: var(--c-warm); font-weight: 700; }
+.scene-foot {
+  position: absolute; bottom: 360px; left: 0; right: 0; text-align: center;
+  font-family: "JetBrains Mono",monospace; font-size: 28px; color: var(--text-dim);
+  letter-spacing: 0.1em;
+}
+.scene-foot .dot { color: var(--c-main); padding: 0 14px; }
 .subtitle-bar {
   position: absolute; left: 60px; right: 60px; bottom: 100px;
-  min-height: 80px; padding: 18px 32px;
-  background: rgba(0,0,0,0.72); border-radius: 14px;
-  color: #ffffff; font-size: 42px; font-weight: 600; line-height: 1.4;
+  min-height: 80px; padding: 22px 36px;
+  background: rgba(0,0,0,0.78); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border); border-radius: 18px;
+  color: #FFFFFF; font-size: 44px; font-weight: 600; line-height: 1.4;
   text-align: center; z-index: 9999; opacity: 0; pointer-events: none;
   display: flex; align-items: center; justify-content: center;
   white-space: pre-line; word-break: break-word; box-sizing: border-box;
-  transition: opacity 0.12s linear;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.7); transition: opacity 0.12s linear;
 }
 .debug-hint {
   position: absolute; top: 12px; left: 12px; z-index: 10000;
-  font-size: 20px; color: #00ff88; background: rgba(0,0,0,0.5);
+  font-size: 20px; color: var(--c-bright); background: rgba(0,0,0,0.5);
   padding: 6px 12px; border-radius: 8px; pointer-events: none;
 }
 </style>
 </head>
 <body>
 <div class="debug-hint">场景 __SID__/__TOTAL__ | ← → 切换 | 空格播放配音</div>
+<div class="bg-noise"></div>
+<div class="glow main"></div>
+<div class="glow warm"></div>
 <div id="subtitle-bar" class="subtitle-bar"></div>
 <audio id="vo" src="voiceover_scene___SID__.mp3" preload="auto"></audio>
 <div id="scene-__SID__" class="scene" data-duration="__DUR__">
@@ -343,16 +394,39 @@ document.addEventListener('keydown', (e) => {
 '''
 
 
+def _palette_for(idx):
+    """Return the palette dict for scene index idx (0-based, cycles)."""
+    return SCENE_PALETTES[idx % len(SCENE_PALETTES)]
+
+
+def _hex_to_rgba(hex_color, alpha):
+    """Convert #RRGGBB to rgba(r,g,b,alpha) string."""
+    h = hex_color.lstrip('#')
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    return f'rgba({r},{g},{b},{alpha})'
+
+
+def _bg_inner_for(palette):
+    """Pick a dark inner gradient color that matches the palette's hue."""
+    name = palette['name']
+    return {
+        'red': '#2A0F1C', 'cyan': '#1B2348', 'violet': '#1F1340',
+        'amber': '#2A1F0E', 'green': '#0E2418',
+    }.get(name, '#1B2348')
+
+
 def _scene_content_tag(scene):
-    """Build the inner HTML for one scene (title + subtitle anim elements)."""
+    """Build the inner HTML for one scene (eyebrow + title + subtitle anim elements)."""
     sid = scene.get('id')
     name = scene.get('name', f'场景{sid}')
-    sub_text = str(scene.get('subtitle', '')).strip().split('\n')[0]
+    sub_lines = str(scene.get('subtitle', '')).strip().split('\n')
+    sub_text = sub_lines[0] if sub_lines else ''
+    eyebrow_text = f'SCENE {sid}'
     return (
-        f'  <div class="anim scene-title" data-delay="0" data-dur="0.6">{name}</div>\n'
-        f'  <div class="anim scene-sub" data-delay="0.4" data-dur="0.6">{sub_text}</div>'
+        f'  <div class="anim eyebrow" data-delay="0" data-dur="0.4">{eyebrow_text}</div>\n'
+        f'  <div class="anim scene-title" data-delay="0.3" data-dur="0.6">{name}</div>\n'
+        f'  <div class="anim scene-sub" data-delay="0.9" data-dur="0.5">{sub_text}</div>'
     )
-
 
 def build_scenes_dir(script, out_dir=None):
     """Generate scenes/scene-N.html (one per scene) + scenes/index.html.
@@ -372,9 +446,19 @@ def build_scenes_dir(script, out_dir=None):
         dur = round(durations[idx], 1)
         subs = _build_scene_subtitles(scene, dur)
         subs_js = json.dumps(subs, ensure_ascii=False, indent=2)
+        palette = _palette_for(idx)
+        bg_inner = _bg_inner_for(palette)
         html = (SCENE_HTML_TEMPLATE
                 .replace('__TITLE__', title)
                 .replace('__SID__', str(sid))
+                .replace('__C_MAIN__', palette['main'])
+                .replace('__C_BRIGHT__', palette['bright'])
+                .replace('__C_DEEP__', palette['deep'])
+                .replace('__C_WARM__', palette['warm'])
+                .replace('__BG_INNER__', bg_inner)
+                .replace('__C_BRIGHT_ALPHA__', _hex_to_rgba(palette['bright'], 0.4))
+                .replace('__C_BRIGHT_ALPHA08__', _hex_to_rgba(palette['bright'], 0.08))
+                .replace('__C_MAIN_ALPHA50__', _hex_to_rgba(palette['main'], 0.5))
                 .replace('__TOTAL__', str(total))
                 .replace('__DUR__', str(dur))
                 .replace('__SCENE_CONTENT__', _scene_content_tag(scene))

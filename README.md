@@ -62,7 +62,7 @@ node bin/cli.js install-skill
 
 AI 助手会按“脚本 → HTML → 配音 → 时长同步 → 截图 → 合成”流程自动推进，每步可人工审核调整。
 
-**制作精美场景**：`script html` 生成的只是可读骨架，要做出精美效果需在审核 HTML 步骤时手动精修。AI 助手会遵循 [精美网页制作指导](./docs/visual-design.md)，运用以下进阶技法：
+**默认精美骨架**：`script html` 现已默认生成精美场景骨架（CSS 变量配色系统、Google 字体、噪点/光晕/玻璃态氛围层、eyebrow 眉标、逐场景配色递进），开箱即用。若要进一步定制视觉（几何 mark、自定义配色、高级排版），参考 [精美网页制作指导](./docs/visual-design.md)，核心技法：
 
 - **设计系统基底** — `:root` CSS 变量色板（强调色给三档主/bright/deep）+ Google 字体 @import（Bricolage Grotesque 展示标题 / Noto Sans SC 中文 / JetBrains Mono 等宽）+ 径向渐变背景（非纯色）
 - **三层氛围装饰** — `bg-noise` 噪点纹理（opacity 0.04-0.06 消除塑料感）+ `glow` 光晕球（`blur(100px)`、部分溢出边缘、一冷一暖对角）+ `glass` 玻璃态（`backdrop-filter: blur()` 透出底层光晕）
