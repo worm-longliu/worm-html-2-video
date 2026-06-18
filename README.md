@@ -72,7 +72,7 @@ npx worm-html-2-video generate
 
 ### 安装 Skill 到 Codex
 
-本项目内置一份 Codex skill（`skill/` 目录），安装后 Codex 即可识别 `html-video-creator` 技能并辅助你制作 HTML 视频。可通过 GitHub 或 Gitee 两个仓库任一安装（国内网络优先 Gitee）：
+本项目内置一份 Codex skill（`skill/` 目录），安装后 Codex 即可识别 `worm-html-2-video` 技能并辅助你制作 HTML 视频。可通过 GitHub 或 Gitee 两个仓库任一安装（国内网络优先 Gitee）：
 
 ```bash
 # 方式一：从 GitHub 安装（npx 拉取并执行 install-skill）
@@ -84,11 +84,9 @@ git clone https://gitee.com/liulong_oschina/worm-html-2-video.git
 cd worm-html-2-video
 node bin/cli.js install-skill
 
-# 方式三：先安装 npm 包再执行（适合已发布到 npm 后）
-npx worm-html-2-video install-skill
 ```
 
-安装目标：`$CODEX_HOME/skills/html-video-creator/`（默认 `~/.codex/skills/html-video-creator/`）。
+安装目标：`$CODEX_HOME/skills/worm-html-2-video/`（默认 `~/.codex/skills/worm-html-2-video/`）。
 安装后重启 Codex 即可加载该 skill。
 
 ### 环境要求与自动安装(失败3次后手工兜底)
@@ -176,7 +174,6 @@ npx playwright install chromium  # 下载 Chromium 浏览器二进制
 | `npx worm-html-2-video sync` | 据配音时长调整 `scenes/` 各场景 HTML（data-duration + SUBTITLES） |
 | `npx worm-html-2-video capture` | Playwright 截图 → `video_html.mp4` |
 | `npx worm-html-2-video generate` | 合成配音 → `video_final.mp4`（复用已有 voiceover.mp3） |
-| `npx worm-html-2-video install-skill` | 将内置 skill/ 安装到本地 Codex skills 目录 |
 
 **script 子命令：** `validate`（校验）`vo`（派生 voiceover_text.txt）`doc`（派生 script.md）`html`（生成 scenes/ 多文件骨架）
 **voiceover 选项：** `--script <p>` `--output <p>` `--timings <p>` `--voice <name>` `--rate <rate>` `--scene-gap <s>`
@@ -303,7 +300,7 @@ Playwright 逐帧调用 `gotoFrame()` 截图，实现精确的动画捕获。
 
 ### skill-intro 案例亮点
 
-这是一个**元案例**（meta-example）：展示 AI 如何使用 html-video-creator 技能从零创建视频。包含：
+这是一个**元案例**（meta-example）：展示 AI 如何使用 worm-html-2-video 技能从零创建视频。包含：
 
 - `thinking_process.md` — AI 的完整决策链路（需求分析→时长规划→文案创作→视觉设计→动画编排→代码生成→质量验证）
 - `script.md` — 分镜脚本（7场景48秒）

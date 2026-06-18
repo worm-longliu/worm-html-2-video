@@ -1,6 +1,6 @@
 # worm-html-2-video Skill 使用说明
 
-本文件收录 `html-video-creator` skill 的**基础使用说明**（安装、项目结构、CLI 工作流、截图合成配置、场景时间调整与人工复核流程）。技能本身的创作规范（HTML 结构、动画系统、CSS、字幕、多平台适配等）见 [SKILL.md](./SKILL.md)。
+本文件收录 `worm-html-2-video` skill 的**基础使用说明**（安装、项目结构、CLI 工作流、截图合成配置、场景时间调整与人工复核流程）。技能本身的创作规范（HTML 结构、动画系统、CSS、字幕、多平台适配等）见 [SKILL.md](./SKILL.md)。
 
 ## 快速开始
 
@@ -16,7 +16,7 @@ npx github:worm-longliu/worm-html-2-video install-skill
 npx https://gitee.com/liulong_oschina/worm-html-2-video.git install-skill
 ```
 
-安装目标：`$CODEX_HOME/skills/html-video-creator/`（默认 `~/.codex/skills/html-video-creator/`）。安装后重启 Codex 即可加载。
+安装目标：`$CODEX_HOME/skills/worm-html-2-video/`（默认 `~/.codex/skills/worm-html-2-video/`）。安装后重启 Codex 即可加载。
 
 ### 项目结构
 

@@ -1,5 +1,5 @@
 ---
-name: html-video-creator
+name: worm-html-2-video
 description: Create and manage HTML-based vertical video projects for Douyin/TikTok. Includes frame-driven animation system, dark theme CSS standards, scene structure, Playwright video rendering pipeline, subtitle generation with precise timing, voiceover automation, multi-platform adaptation, and copywriting templates. Use when creating HTML video pages, generating videos from HTML, optimizing dark theme colors, creating subtitles, or extracting video copywriting.
 ---
 

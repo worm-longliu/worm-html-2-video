@@ -195,7 +195,7 @@ function resolveSkillName() {
     const match = content.match(/^name:\s*(.+)$/m);
     if (match) return match[1].trim();
   }
-  return 'html-video-creator';
+  return 'worm-html-2-video';
 }
 
 function cmdInstallSkill() {
