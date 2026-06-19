@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1080, height=1920">
+<meta name="viewport" content="width=1080, height=1440">
 <title>worm-html-2-video 项目介绍 - 场景1</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap');
@@ -15,7 +15,7 @@
   --text: #FFFFFF; --text-sub: #E6E6E6; --text-dim: #CCCCCC;
   --glass: rgba(255,255,255,0.05); --glass-border: rgba(255,255,255,0.14);
 }
-body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
+body { width: 1080px; height: 1440px; overflow: hidden; position: relative;
   background: radial-gradient(ellipse at 50% 30%, #2A0F1C 0%, #14060C 72%);
   font-family: "Noto Sans SC","Microsoft YaHei",sans-serif; -webkit-font-smoothing: antialiased; }
 .bg-noise { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.05;
@@ -23,7 +23,7 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 .glow { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.36; z-index: 0; pointer-events: none; }
 .glow.red { width: 560px; height: 560px; background: var(--red); top: 8%; left: -140px; opacity: 0.34; }
 .glow.amber { width: 420px; height: 420px; background: var(--amber); bottom: 16%; right: -120px; opacity: 0.20; }
-.scene { position: absolute; inset: 0; padding: 200px 70px 300px; display: flex; flex-direction: column;
+.scene { position: absolute; inset: 0; padding: 130px 120px 220px; display: flex; flex-direction: column;
   align-items: center; justify-content: center; z-index: 1; }
 .anim { opacity: 0; transform: translateY(30px); }
 .s1-mark-wrap { position: relative; width: 380px; height: 380px; margin-bottom: 90px;
@@ -55,7 +55,7 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 .s1-sub { font-size: 36px; font-weight: 500; line-height: 1.55; color: var(--text-sub);
   text-align: center; max-width: 880px; }
 .s1-sub .mono { font-family: "JetBrains Mono",monospace; color: var(--amber-bright); font-weight: 700; }
-.s1-foot { position: absolute; bottom: 360px; left: 0; right: 0; text-align: center;
+.s1-foot { position: absolute; bottom: 260px; left: 120px; right: 120px; text-align: center;
   font-family: "JetBrains Mono",monospace; font-size: 28px; color: var(--text-dim);
   letter-spacing: 0.1em; }
 .s1-foot .dot { color: var(--red); padding: 0 14px; }
@@ -76,16 +76,16 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 <div class="glow amber"></div>
 <div id="subtitle-bar" class="subtitle-bar"></div>
 <audio id="vo" src="voiceover_scene_1.mp3" preload="auto"></audio>
-<div id="scene-1" class="scene" data-duration="7.4">
+<div id="scene-1" class="scene" data-duration="7.8">
   <div class="anim s1-mark-wrap" data-delay="0" data-dur="0.6">
     <div class="s1-mark-ring"></div>
     <div class="s1-mark-ring inner"></div>
     <div class="s1-mark-core"></div>
   </div>
   <div class="anim s1-eyebrow" data-delay="0.6" data-dur="0.4">PAIN POINT</div>
-  <div class="anim s1-title" data-delay="0.6" data-dur="0.6">做视频，<span class="hl">还在学软件？</span></div>
-  <div class="anim s1-sub" data-delay="1.8" data-dur="0.5">装软件半天，<span class="mono">3 天</span>才出一个短视频</div>
-  <div class="anim s1-foot" data-delay="2.4" data-dur="0.4">特效软件<span class="dot">·</span>剪辑软件<span class="dot">·</span>学不完的工具</div>
+  <div class="anim s1-title" data-delay="0.6" data-dur="0.6">做视频，<span class="hl">还在被流程拖慢？</span></div>
+  <div class="anim s1-sub" data-delay="1.8" data-dur="0.5">一整套步骤跑下来，<span class="mono">耗时不少</span></div>
+  <div class="anim s1-foot" data-delay="2.4" data-dur="0.4">工具多<span class="dot">·</span>步骤长<span class="dot">·</span>节奏慢</div>
 </div>
 <script>
 const FPS = 30;
@@ -95,13 +95,13 @@ const SCENE_TOTAL = 6;
 const SUBTITLES = [
   {
     "start": 0.0,
-    "end": 3.88,
-    "text": "做视频还在学特效软件学剪辑软件？"
+    "end": 3.45,
+    "text": "做短视频,还在被复杂流程拖慢节奏?"
   },
   {
-    "start": 3.88,
-    "end": 7.44,
-    "text": "装软件就半天，一个短视频做三天。"
+    "start": 3.45,
+    "end": 7.78,
+    "text": "从准备到成片,一整套步骤跑下来,常常耗时不少。"
   }
 ];
 const subtitleBar = document.getElementById('subtitle-bar');

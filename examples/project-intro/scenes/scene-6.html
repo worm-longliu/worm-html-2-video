@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1080, height=1920">
+<meta name="viewport" content="width=1080, height=1440">
 <title>worm-html-2-video 项目介绍 - 场景6</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap');
@@ -14,7 +14,7 @@
   --text: #F5F7FF; --text-sub: #C9D2F0; --text-dim: #AEB8D8;
   --glass: rgba(255,255,255,0.05); --glass-border: rgba(255,255,255,0.14);
 }
-body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
+body { width: 1080px; height: 1440px; overflow: hidden; position: relative;
   background: radial-gradient(ellipse at 50% 40%, #1A1530 0%, #0B0E1A 75%);
   font-family: "Noto Sans SC","Microsoft YaHei",sans-serif; -webkit-font-smoothing: antialiased; }
 .bg-noise { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.05;
@@ -22,10 +22,10 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 .glow { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.3; z-index: 0; pointer-events: none; }
 .glow.amber { width: 520px; height: 520px; background: var(--amber); top: 14%; left: -120px; }
 .glow.cyan { width: 460px; height: 460px; background: var(--cyan); bottom: 14%; right: -90px; opacity: 0.22; }
-.scene { position: absolute; inset: 0; padding: 200px 70px 280px; display: flex; flex-direction: column;
+.scene { position: absolute; inset: 0; padding: 150px 120px 220px; display: flex; flex-direction: column;
   align-items: center; justify-content: center; z-index: 1; }
 .anim { opacity: 0; transform: translateY(30px); }
-.orbit-wrap { position: relative; width: 300px; height: 300px; margin-bottom: 64px; }
+.orbit-wrap { position: relative; width: 300px; height: 300px; margin-bottom: 48px; }
 .orbit { position: absolute; inset: 0; border-radius: 50%; border: 2px solid transparent;
   border-top-color: var(--amber); border-right-color: var(--cyan);
   box-shadow: 0 0 44px rgba(255,179,71,0.4); animation: spin 6s linear infinite; }
@@ -53,7 +53,7 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
   background: rgba(255,179,71,0.10);
   border: 1.5px solid var(--amber);
   box-shadow: 0 0 32px rgba(255,179,71,0.35), inset 0 0 22px rgba(255,213,107,0.12);
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); margin-bottom: 52px; }
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); margin-bottom: 40px; }
 .open-tag .star { color: var(--amber); margin: 0 6px; }
 .bottom-cta { font-size: 40px; font-weight: 700; color: var(--text); text-align: center; line-height: 1.5;
   text-shadow: 0 2px 16px rgba(0,0,0,0.5); }
@@ -76,7 +76,7 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 <div class="glow cyan"></div>
 <div id="subtitle-bar" class="subtitle-bar"></div>
 <audio id="vo" src="voiceover_scene_6.mp3" preload="auto"></audio>
-<div id="scene-6" class="scene" data-duration="7.1">
+<div id="scene-6" class="scene" data-duration="8.4">
   <div class="anim orbit-wrap" data-delay="0" data-dur="0.6">
     <div class="orbit">
       <div class="orbit-dot"></div>
@@ -86,8 +86,8 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
     </div>
   </div>
   <div class="anim proj-title" data-delay="0.6" data-dur="0.6">worm-html-2-video<span class="accent">HTML · 视频生成工具</span></div>
-  <div class="anim open-tag" data-delay="1.6" data-dur="0.5">开源免费<span class="star">★</span>OPEN SOURCE</div>
-  <div class="anim bottom-cta" data-delay="2.6" data-dur="0.5">会写网页就行<span class="arrow">→</span><span class="hl">快来试试吧</span></div>
+  <div class="anim open-tag" data-delay="1.6" data-dur="0.5">开源工具<span class="star">★</span>OPEN SOURCE</div>
+  <div class="anim bottom-cta" data-delay="2.6" data-dur="0.5">会写网页就行<span class="arrow">→</span><span class="hl">就能上手</span></div>
 </div>
 <script>
 const FPS = 30;
@@ -97,13 +97,13 @@ const SCENE_TOTAL = 6;
 const SUBTITLES = [
   {
     "start": 0.0,
-    "end": 3.93,
-    "text": "worm-html-2-video，开源免费。"
+    "end": 5.85,
+    "text": "worm-html-2-video,一个开源的 HTML 视频生成工具。"
   },
   {
-    "start": 3.93,
-    "end": 6.65,
-    "text": "会写网页就行，快来试试吧！"
+    "start": 5.85,
+    "end": 7.94,
+    "text": "会写网页就能上手。"
   }
 ];
 const subtitleBar = document.getElementById('subtitle-bar');

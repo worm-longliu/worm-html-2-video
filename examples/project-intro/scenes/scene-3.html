@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1080, height=1920">
+<meta name="viewport" content="width=1080, height=1440">
 <title>worm-html-2-video 项目介绍 - 场景3</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap');
@@ -14,7 +14,7 @@
   --text: #F5F7FF; --text-sub: #C9D2F0; --text-dim: #AEB8D8;
   --glass: rgba(255,255,255,0.05); --glass-border: rgba(255,255,255,0.14);
 }
-body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
+body { width: 1080px; height: 1440px; overflow: hidden; position: relative;
   background: radial-gradient(ellipse at 50% 30%, #10182E 0%, #0B0E1A 72%);
   font-family: "Noto Sans SC","Microsoft YaHei",sans-serif; -webkit-font-smoothing: antialiased; }
 .bg-noise { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.05;
@@ -28,7 +28,7 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 .glow { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.28; z-index: 0; pointer-events: none; }
 .glow.cyan { width: 540px; height: 540px; background: var(--cyan); top: 14%; left: 50%; transform: translateX(-50%); opacity: 0.20; }
 .glow.amber { width: 420px; height: 420px; background: var(--amber); bottom: 16%; right: -120px; opacity: 0.22; }
-.scene { position: absolute; inset: 0; padding: 240px 70px 300px; display: flex; flex-direction: column;
+.scene { position: absolute; inset: 0; padding: 150px 120px 220px; display: flex; flex-direction: column;
   align-items: center; justify-content: center; z-index: 1; }
 .anim { opacity: 0; transform: translateY(30px); }
 .eyebrow { font-family: "Bricolage Grotesque",sans-serif; font-size: 28px; font-weight: 600;
@@ -37,10 +37,10 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
   line-height: 1.1; text-align: center; margin-bottom: 24px; color: var(--text); }
 .s3-title em { font-style: normal; background: linear-gradient(180deg, var(--cyan) 0%, #3DB8E6 100%);
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-.s3-sub { font-size: 32px; color: var(--text-sub); margin-bottom: 76px; line-height: 1.5; text-align: center;
+.s3-sub { font-size: 32px; color: var(--text-sub); margin-bottom: 56px; line-height: 1.5; text-align: center;
   font-family: "JetBrains Mono",monospace; letter-spacing: 0.04em; }
 .s3-sub .accent { color: var(--amber-bright); }
-.s3-frames { display: flex; gap: 18px; margin-bottom: 60px; width: 100%; align-items: stretch; }
+.s3-frames { display: flex; gap: 18px; margin-bottom: 44px; width: 100%; align-items: stretch; }
 .frame { flex: 1; aspect-ratio: 1 / 1.25; border-radius: 18px; border: 2px solid rgba(94,231,255,0.28);
   background: linear-gradient(180deg, rgba(94,231,255,0.05), rgba(94,231,255,0.02));
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
@@ -57,7 +57,7 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 .frame.lit .dot { background: #ffffff; box-shadow: 0 0 22px var(--cyan), 0 0 40px var(--cyan); }
 .frame.lit::before { background: linear-gradient(90deg, transparent, var(--cyan), transparent); opacity: 1; }
 .s3-progress { width: 100%; height: 16px; border-radius: 10px; background: rgba(255,255,255,0.07);
-  overflow: hidden; margin-bottom: 64px; position: relative; border: 1px solid var(--glass-border); }
+  overflow: hidden; margin-bottom: 48px; position: relative; border: 1px solid var(--glass-border); }
 .s3-progress .bar { height: 100%; width: 68%; border-radius: 10px;
   background: linear-gradient(90deg, var(--cyan), var(--amber-bright));
   box-shadow: 0 0 18px rgba(255,179,71,0.55), 0 0 8px rgba(94,231,255,0.5); position: relative; }
@@ -119,12 +119,12 @@ const SUBTITLES = [
   {
     "start": 0.0,
     "end": 3.27,
-    "text": "帧驱动动画系统，精确到每一帧。"
+    "text": "帧驱动动画系统,精确到每一帧。"
   },
   {
     "start": 3.27,
     "end": 7.87,
-    "text": "5 fps 采集，30 fps 输出，流畅又高效。"
+    "text": "5 fps 采集,30 fps 输出,流畅又高效。"
   }
 ];
 const subtitleBar = document.getElementById('subtitle-bar');

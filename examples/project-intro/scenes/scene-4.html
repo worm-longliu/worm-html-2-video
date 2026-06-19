@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1080, height=1920">
+<meta name="viewport" content="width=1080, height=1440">
 <title>worm-html-2-video 项目介绍 - 场景4</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap');
@@ -14,7 +14,7 @@
   --text: #F5F0FF; --text-sub: #E8DFFF; --text-dim: #C9BEE8;
   --glass: rgba(255,255,255,0.06); --glass-border: rgba(255,255,255,0.16);
 }
-body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
+body { width: 1080px; height: 1440px; overflow: hidden; position: relative;
   background:
     radial-gradient(ellipse 900px 700px at 50% 12%, rgba(255,179,71,0.30) 0%, transparent 60%),
     radial-gradient(ellipse 700px 600px at 88% 70%, rgba(157,111,224,0.32) 0%, transparent 60%),
@@ -26,16 +26,16 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 .glow { position: absolute; border-radius: 50%; filter: blur(80px); z-index: 0; pointer-events: none; }
 .glow-1 { width: 520px; height: 520px; top: -80px; left: -120px; background: rgba(255,179,71,0.40); }
 .glow-2 { width: 600px; height: 600px; bottom: 220px; right: -180px; background: rgba(157,111,224,0.42); }
-.scene { position: absolute; inset: 0; padding: 150px 64px 260px; display: flex; flex-direction: column; z-index: 1; }
+.scene { position: absolute; inset: 0; padding: 120px 120px 200px; display: flex; flex-direction: column; z-index: 1; }
 .anim { opacity: 0; transform: translateY(30px); }
 .eyebrow { font-family: "Bricolage Grotesque",sans-serif; font-size: 26px; font-weight: 600;
   letter-spacing: 0.38em; color: var(--amber-bright); text-transform: uppercase; margin-bottom: 18px; }
 .s4-title { font-family: "Bricolage Grotesque","Noto Sans SC",sans-serif; font-size: 64px; font-weight: 800;
   line-height: 1.12; color: var(--text); margin-bottom: 12px; }
 .s4-title em { font-style: normal; color: var(--amber-bright); }
-.s4-sub { font-size: 28px; color: var(--text-dim); margin-bottom: 30px; font-weight: 500; }
+.s4-sub { font-size: 28px; color: var(--text-dim); margin-bottom: 24px; font-weight: 500; }
 .steps { display: flex; flex-direction: column; gap: 0; flex: 1; justify-content: flex-start; }
-.step { display: flex; align-items: center; gap: 24px; padding: 18px 28px; border-radius: 16px;
+.step { display: flex; align-items: center; gap: 24px; padding: 14px 26px; border-radius: 16px;
   background: var(--glass); border: 1px solid var(--glass-border); backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px); position: relative; }
 .step.last { background: linear-gradient(90deg, rgba(255,179,71,0.22), rgba(157,111,224,0.12));
@@ -74,7 +74,7 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 <div class="glow glow-2"></div>
 <div id="subtitle-bar" class="subtitle-bar"></div>
 <audio id="vo" src="voiceover_scene_4.mp3" preload="auto"></audio>
-<div id="scene-4" class="scene" data-duration="9.2">
+<div id="scene-4" class="scene" data-duration="9.3">
   <div class="anim eyebrow" data-delay="0" data-dur="0.5">PIPELINE</div>
   <div class="anim s4-title" data-delay="0.1" data-dur="0.5">六步<em>流水线</em>自动化</div>
   <div class="anim s4-sub" data-delay="0.3" data-dur="0.4">一行命令，从脚本到成片</div>
@@ -101,12 +101,12 @@ const SUBTITLES = [
   {
     "start": 0.0,
     "end": 7.35,
-    "text": "全程六步自动化：写脚本、生成页面、配音、对时间轴、截图、合成。"
+    "text": "全程六步自动化:写脚本、生成页面、配音、对时间轴、截图、合成。"
   },
   {
     "start": 7.35,
-    "end": 9.19,
-    "text": "一条命令搞定。"
+    "end": 9.26,
+    "text": "一条命令完成。"
   }
 ];
 const subtitleBar = document.getElementById('subtitle-bar');

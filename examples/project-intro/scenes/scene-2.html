@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1080, height=1920">
+<meta name="viewport" content="width=1080, height=1440">
 <title>worm-html-2-video 项目介绍 - 场景2</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700;800&display=swap');
@@ -14,16 +14,16 @@
   --text: #F5F7FF; --text-sub: #C9D2F0; --text-dim: #AEB8D8;
   --glass: rgba(255,255,255,0.05); --glass-border: rgba(255,255,255,0.14);
 }
-body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
+body { width: 1080px; height: 1440px; overflow: hidden; position: relative;
   background: radial-gradient(ellipse at 50% 32%, #1B2348 0%, #0E1226 55%, #070912 100%);
   font-family: "Noto Sans SC","Microsoft YaHei",sans-serif; -webkit-font-smoothing: antialiased; }
 .bg-noise { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.05;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E"); }
-.bg-glow-top { position: absolute; left: 50%; top: 240px; transform: translateX(-50%); z-index: 0;
+.bg-glow-top { position: absolute; left: 50%; top: 180px; transform: translateX(-50%); z-index: 0;
   width: 900px; height: 900px; border-radius: 50%; pointer-events: none;
   background: radial-gradient(circle, rgba(94,231,255,0.16) 0%, rgba(255,179,71,0.08) 40%, transparent 70%);
   filter: blur(20px); }
-.scene { position: absolute; inset: 0; padding: 150px 70px 280px;
+.scene { position: absolute; inset: 0; padding: 120px 120px 220px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2; }
 .anim { opacity: 0; transform: translateY(30px); }
 .eyebrow { font-family: "Bricolage Grotesque",sans-serif; font-size: 28px; font-weight: 600;
@@ -47,7 +47,7 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
   -webkit-text-fill-color: transparent; color: transparent; }
 .hero-tag { margin-top: 26px; font-family: "JetBrains Mono",monospace; font-size: 30px; font-weight: 500;
   color: var(--text-dim); letter-spacing: 0.12em; }
-.feat { margin-top: 70px; display: flex; gap: 22px; width: 100%; justify-content: center; }
+.feat { margin-top: 50px; display: flex; gap: 22px; width: 100%; justify-content: center; }
 .feat-card { flex: 1; max-width: 280px; border-radius: 22px; padding: 30px 22px; text-align: center;
   background: var(--glass); border: 1px solid var(--glass-border);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
@@ -80,17 +80,17 @@ body { width: 1080px; height: 1920px; overflow: hidden; position: relative;
 <div class="particles" id="particles"></div>
 <div id="subtitle-bar" class="subtitle-bar"></div>
 <audio id="vo" src="voiceover_scene_2.mp3" preload="auto"></audio>
-<div id="scene-2" class="scene" data-duration="6.7">
+<div id="scene-2" class="scene" data-duration="7.1">
   <div class="anim eyebrow" data-delay="0" data-dur="0.5">SOLUTION · 方案揭晓</div>
   <div class="hero-wrap">
     <div class="anim hero-html shimmer" data-delay="0" data-dur="0.8">HTML</div>
     <div class="anim hero-sub" data-delay="0.8" data-dur="0.6">会写网页<span class="grad">就能做视频</span></div>
-    <div class="anim hero-tag" data-delay="1.2" data-dur="0.5">+ CSS 动画 = 分钟级出片</div>
+    <div class="anim hero-tag" data-delay="1.2" data-dur="0.5">+ CSS 动画 = 快速出片</div>
   </div>
   <div class="anim feat" data-delay="1.6" data-dur="0.6">
     <div class="feat-card"><div class="feat-num">01</div><div class="feat-text">HTML<br>结构</div></div>
     <div class="feat-card"><div class="feat-num">02</div><div class="feat-text">CSS<br>动画</div></div>
-    <div class="feat-card"><div class="feat-num">03</div><div class="feat-text">分钟级<br>出片</div></div>
+    <div class="feat-card"><div class="feat-num">03</div><div class="feat-text">快速<br>出片</div></div>
   </div>
 </div>
 <script>
@@ -123,13 +123,13 @@ const SCENE_TOTAL = 6;
 const SUBTITLES = [
   {
     "start": 0.0,
-    "end": 2.72,
+    "end": 2.74,
     "text": "其实会写网页就能做视频。"
   },
   {
-    "start": 2.72,
-    "end": 6.7,
-    "text": "HTML 加 CSS 动画，分钟级出片。"
+    "start": 2.74,
+    "end": 7.08,
+    "text": "用 HTML 加 CSS 动画,快速完成出片。"
   }
 ];
 const subtitleBar = document.getElementById('subtitle-bar');
