@@ -34,6 +34,9 @@ DEFAULT_FPS = 30
 EST_CHARS_PER_SECOND = 4.5
 EST_MIN_SCENE = 3.0
 EST_BUFFER = 1.0
+# 视频画幅默认值(script.json 的 "video": {"width":..,"height":..} 可覆盖)
+DEFAULT_VIDEO_WIDTH = 1080
+DEFAULT_VIDEO_HEIGHT = 1920
 # 精美骨架的逐场景配色递进（红→青→紫→琥珀→绿，循环复用）
 # 每套配色含主色/亮色/深色/暖辅色，对应 visual-design.md 的逐场景配色策略
 SCENE_PALETTES = [
@@ -106,6 +109,14 @@ def validate_script(script):
     ids = [s.get('id') for s in script['scenes'] if 'id' in s]
     if len(ids) != len(set(ids)):
         errors.append("duplicate scene 'id' values")
+    # validate optional video config (width/height must be positive ints)
+    video = script.get('video')
+    if isinstance(video, dict):
+        for key in ('width', 'height'):
+            if key in video:
+                val = video[key]
+                if not (isinstance(val, int) and val > 0):
+                    errors.append(f"video.{key} must be a positive integer")
     return (len(errors) == 0), errors
 
 
@@ -197,7 +208,7 @@ SCENE_HTML_TEMPLATE = '''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1080, height=1920">
+<meta name="viewport" content="width=__W__, height=__H__">
 <title>__TITLE__ - 场景__SID__</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap');
@@ -208,7 +219,7 @@ SCENE_HTML_TEMPLATE = '''<!DOCTYPE html>
   --glass: rgba(255,255,255,0.05); --glass-border: rgba(255,255,255,0.14);
 }
 body {
-  width: 1080px; height: 1920px; overflow: hidden;
+  width: __W__px; height: __H__px; overflow: hidden;
   font-family: "Noto Sans SC","Microsoft YaHei",sans-serif;
   background: radial-gradient(ellipse at 50% 30%, __BG_INNER__ 0%, #0E1226 55%, #070912 100%);
   -webkit-font-smoothing: antialiased;
@@ -224,7 +235,7 @@ body {
   bottom: 16%; right: -120px; opacity: 0.20; }
 .scene {
   position: absolute; top: 0; left: 0;
-  width: 1080px; height: 1920px; opacity: 1; z-index: 1;
+  width: __W__px; height: __H__px; opacity: 1; z-index: 1;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 0 60px;
 }
@@ -355,12 +366,12 @@ INDEX_HTML_TEMPLATE = '''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1080, height=1920">
+<meta name="viewport" content="width=__W__, height=__H__">
 <title>__TITLE__ - 场景导航</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  width: 1080px; height: 1920px; overflow: hidden;
+  width: __W__px; height: __H__px; overflow: hidden;
   font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
   background: #0f0c29; color: #fff; -webkit-font-smoothing: antialiased;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -392,6 +403,16 @@ document.addEventListener('keydown', (e) => {
 </body>
 </html>
 '''
+
+
+def _video_dims(script):
+    """Return (width, height) from script.json "video" config, with defaults."""
+    video = script.get('video') or {}
+    w = int(video.get('width', DEFAULT_VIDEO_WIDTH))
+    h = int(video.get('height', DEFAULT_VIDEO_HEIGHT))
+    if w <= 0 or h <= 0:
+        w, h = DEFAULT_VIDEO_WIDTH, DEFAULT_VIDEO_HEIGHT
+    return w, h
 
 
 def _palette_for(idx):
@@ -438,6 +459,7 @@ def build_scenes_dir(script, out_dir=None):
     """
     durations = _estimate_durations(script)
     title = script.get('title', 'My Video')
+    width, height = _video_dims(script)
     base = out_dir or os.path.join(os.getcwd(), 'scenes')
     os.makedirs(base, exist_ok=True)
     total = len(script['scenes'])
@@ -462,6 +484,8 @@ def build_scenes_dir(script, out_dir=None):
                 .replace('__TOTAL__', str(total))
                 .replace('__DUR__', str(dur))
                 .replace('__SCENE_CONTENT__', _scene_content_tag(scene))
+                .replace('__W__', str(width))
+                .replace('__H__', str(height))
                 .replace('__SUBTITLES__', subs_js))
         with open(os.path.join(base, f'scene-{sid}.html'), 'w', encoding='utf-8') as f:
             f.write(html)
@@ -472,6 +496,8 @@ def build_scenes_dir(script, out_dir=None):
     index_html = (INDEX_HTML_TEMPLATE
                   .replace('__TITLE__', title)
                   .replace('__TOTAL__', str(total))
+                  .replace('__W__', str(width))
+                  .replace('__H__', str(height))
                   .replace('__SCENE_LINKS__', links))
     with open(os.path.join(base, 'index.html'), 'w', encoding='utf-8') as f:
         f.write(index_html)

@@ -72,6 +72,7 @@ Docs:  https://github.com/worm-longliu/worm-html-2-video
 const SCRIPT_JSON_TEMPLATE = `{
   "title": "My Video",
   "target_platform": "douyin",
+  "video": { "width": 1080, "height": 1920 },
   "scenes": [
     {
       "id": 1,
