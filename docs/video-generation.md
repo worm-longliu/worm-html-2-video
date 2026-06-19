@@ -87,6 +87,7 @@ if (!existsSync(outputDir)) {
 
 // ===== 启动浏览器 =====
 const browser = await chromium.launch();
+// viewport 尺寸读取自 script.json 的 video 配置（默认 1080×1920）
 const page = await browser.newPage({
   viewport: { width: 1080, height: 1920 }
 });
@@ -534,7 +535,9 @@ if __name__ == '__main__':
 | 视频号 | 1080×1920 | 9:16 | 同抖音 |
 | B站竖屏 | 1080×1920 | 9:16 | 竖屏模式 |
 | B站横屏 | 1920×1080 | 16:9 | 需重新排版 |
-| 小红书 | 1080×1440 | 3:4 | 需裁剪顶底 |
+| 小红书 | 1080×1440 | 3:4 | script.json 设 video 字段原生输出 |
+
+> **分辨率可配置**：在 `script.json` 顶层加 `"video": {"width": 1080, "height": 1440}`，`lib/script_tool.py`（生成场景 HTML 的 viewport/body）与 `lib/capture.mjs`（Playwright 截图 + FFmpeg 编码）自动读取该尺寸，无需 FFmpeg 裁剪。未配置时默认 1080×1920。
 
 ### 分辨率转换
 
@@ -561,7 +564,7 @@ def convert_resolution(input_file, output_file, target_w, target_h):
 ### 自动验证脚本
 
 ```python
-def verify_output(video_path, expected_duration=None):
+def verify_output(video_path, expected_duration=None, expected_size=(1080, 1920)):
     """验证最终视频质量"""
     # 获取视频信息
     result = subprocess.run(
@@ -586,10 +589,11 @@ def verify_output(video_path, expected_duration=None):
     print(f"   编码: {video_stream['codec_name']}")
     print(f"   音频: {'有' if audio_stream else '无'}")
     
-    # 验证
+    # 验证（期望值取自 script.json 的 video 配置，默认 1080×1920）
+    expected_w, expected_h = expected_size
     issues = []
-    if width != 1080 or height != 1920:
-        issues.append(f"分辨率异常: {width}x{height} (期望 1080x1920)")
+    if (width, height) != (expected_w, expected_h):
+        issues.append(f"分辨率异常: {width}x{height} (期望 {expected_w}x{expected_h})")
     if audio_stream is None:
         issues.append("缺少音频轨道")
     if expected_duration and abs(duration - expected_duration) > 2:

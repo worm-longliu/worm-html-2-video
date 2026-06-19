@@ -120,6 +120,8 @@ font-family: "Cascadia Code", "JetBrains Mono", "Consolas", monospace;
 | **通用安全** | **180px** | **300px** | **40px** | **1440px** |
 
 > **最佳实践**：以抖音为标准设计（最严格），其他平台自动兼容。
+>
+> **3:4（如小红书 1080×1440）**：纵向高度由 1920 收紧到 1440，顶部/底部安全内边距按比例下调（如 padding-top 200→150、padding-bottom 320→240），左右留白加宽至 80–120px 避免主体贴边。
 
 ### 场景内边距
 
@@ -259,7 +261,9 @@ text-shadow: 0 0 30px rgba(255,255,255,0.2);
 
 ## 布局规范
 
-### 场景容器（固定 1080×1920）
+### 场景容器（默认 1080×1920，可配置）
+
+> 1080×1920 为默认值；在 `script.json` 顶层设 `"video": {"width": 1080, "height": 1440}` 可生成 3:4 等其他比例，viewport/body/scene 尺寸由 `script_tool.py` 自动注入。
 
 ```css
 body {
