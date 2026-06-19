@@ -80,7 +80,7 @@ const SCRIPT_JSON_TEMPLATE = `{
       "visual": "主标题居中,副标题渐入",
       "animation": "标题淡入(0s) → 副标题淡入(0.4s)",
       "key_elements": ["主标题", "绿色强调"],
-      "voiceover": "用HTML就能做抖音视频？2分钟自动出片！",
+      "voiceover": "用HTML就能做视频？2分钟自动出片！",
       "subtitle": "用HTML做视频\\n2分钟出片"
     },
     {
@@ -89,7 +89,7 @@ const SCRIPT_JSON_TEMPLATE = `{
       "visual": "四步流程图",
       "animation": "流程节点依次高亮",
       "key_elements": ["Playwright", "Edge-TTS", "FFmpeg"],
-      "voiceover": "全程自动化：Playwright截图，Edge-TTS免费配音，FFmpeg一键合成带字幕视频。",
+      "voiceover": "全程自动化：Playwright截图，Edge-TTS语音配音，FFmpeg一键合成带字幕视频。",
       "subtitle": "全程自动化\\n截图+配音+合成"
     },
     {
@@ -98,8 +98,8 @@ const SCRIPT_JSON_TEMPLATE = `{
       "visual": "GitHub地址 + Star按钮",
       "animation": "Logo脉冲 → 地址弹出",
       "key_elements": ["GitHub地址", "Star"],
-      "voiceover": "worm-html-2-video，开源免费。关注我，教你做技术视频！",
-      "subtitle": "开源免费\\n求Star"
+      "voiceover": "worm-html-2-video，开源工具。关注我，教你做技术视频！",
+      "subtitle": "开源工具\\n求Star"
     }
   ]
 }
